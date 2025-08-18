@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+/* styles/globals.css */
+@layer components {
+  .bg-matrix {
+    @apply bg-[linear-gradient(90deg,transparent_0%,rgba(0,255,0,0.03)_50%,transparent_100%),linear-gradient(0deg,transparent_0%,rgba(0,255,0,0.03)_50%,transparent_100%)];
+    background-size: 20px 20px;
+  }
+  
+  .bg-circuit {
+    @apply bg-[radial-gradient(circle_at_1px_1px,rgba(0,255,255,0.15)_1px,transparent_0)];
+    background-size: 30px 30px;
+  }
+  
+  .bg-stars {
+    @apply bg-[radial-gradient(2px_2px_at_20px_30px,white,transparent),radial-gradient(2px_2px_at_40px_70px,white,transparent)];
+    background-size: 200px 100px;
+  }
+  
+  .bg-waves {
+    @apply bg-[radial-gradient(ellipse_at_center,rgba(0,100,255,0.1)_0%,transparent_70%)];
+  }
+  
+  .bg-grid {
+    @apply bg-[linear-gradient(rgba(0,255,0,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.1)_1px,transparent_1px)];
+    background-size: 50px 50px;
+  }
+}
+
+/* Frame Effects */
+.led-frame {
+  border: 2px solid #333;
+  box-shadow: 
+    0 0 10px #00ff00,
+    inset 0 0 10px #00ff00;
+}
+
+.neon-frame {
+  border: 1px solid #00ffff;
+  box-shadow: 
+    0 0 20px #00ffff,
+    inset 0 0 20px #00ffff;
+}
+
+.metal-frame {
+  border: 4px solid #555;
+  background: linear-gradient(145deg, #777, #333);
+  box-shadow: 
+    0 0 10px rgba(0,0,0,0.5),
+    inset 0 0 20px rgba(0,0,0,0.3);
+}
+
+.glass-panel {
+  border: 1px solid rgba(255,255,255,0.2);
+  backdrop-filter: blur(5px);
+  background: rgba(0,0,0,0.2);
+  box-shadow: 0 0 15px rgba(0,255,255,0.3);
+}
+
+/* LED Screen Effect */
+.led-screen-effect {
+  background-image: 
+    linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+  background-size: 10px 10px;
+  opacity: 0.3;
+}
+
+/* styles.css */
+@media screen and (orientation: portrait) {
+  .led-display:-webkit-full-screen {
+    transform: rotate(90deg);
+    width: 100vh;
+    height: 100vw;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform-origin: top left;
+  }
+  
+  .led-display:fullscreen {
+    transform: rotate(90deg);
+    width: 100vh;
+    height: 100vw;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform-origin: top left;
+  }
+}
+
+
+.led-display:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+}
+
+.led-display:-moz-full-screen {
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+}
+
+.led-display:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+}
+
+/* Add this to your CSS */
+.bg-transition {
+  transition: background-color 300ms ease-in-out;
+}
+
+/* Add this to your CSS */
+.rgb-border {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.corner-light {
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
