@@ -1,22 +1,30 @@
 // stores/useScrollerStore.js
 import { create } from 'zustand';
-import {presets} from './presets';
+import { presets } from './presets';
+
 export const useScrollerStore = create((set) => ({
-   
   // Text properties
   text: '',
   font: "'Orbitron', monospace",
   textCase: 'uppercase',
   letterSpacing: 3,
   lineHeight: 1.2,
-   ...presets.default,
-   loadPreset: (presetName) => {
+  fontSize: 80,
+  textSkew: 0,
+  textRotation: 0,
+  
+  ...presets.default,
+  
+  loadPreset: (presetName) => {
     const presetToLoad = presets[presetName] || presets.default;
     set({ ...presetToLoad });
   },
-   flickerEnabled: false,
-  flickerSpeed: 5, // 1-10
+  
+  flickerEnabled: false,
+  flickerSpeed: 5,
+  flickerIntensity: 0,
   flickerColors: ['#ff0000', '#00ff00', '#0000ff'],
+  
   // Color & effects
   color: '#00ff00',
   outlineColor: '#000000',
@@ -45,16 +53,28 @@ export const useScrollerStore = create((set) => ({
   intensity: 50,
 
   rgbBorderEnabled: false,
-  rgbBorderSpeed: 5, // 1-10
+  rgbBorderSpeed: 5,
   rgbBorderColors: ['#ff0000', '#00ff00', '#0000ff'],
   
-
   saveCurrentPreset: (name) => {
-    // In a real app, you would save to localStorage or backend
     console.log("Would save preset:", name);
-    // You would update your presets.js file here
   },
-  // Actions
+  
+  // Actions - FIXED: Added missing individual outline functions
+  setFontSize: (fontSize) => set({ fontSize }),
+  setTextSkew: (textSkew) => set({ textSkew }),
+  setTextRotation: (textRotation) => set({ textRotation }),
+  setFlickerIntensity: (flickerIntensity) => set({ flickerIntensity }),
+  
+  // Individual outline controls (FIXED)
+  setOutlineColor: (outlineColor) => set({ outlineColor }),
+  setOutlineWidth: (outlineWidth) => set({ outlineWidth }),
+  
+  // Individual shadow controls (FIXED)
+  setShadowColor: (shadowColor) => set({ shadowColor }),
+  setShadowBlur: (shadowBlur) => set({ shadowBlur }),
+  
+  // Existing actions
   toggleRgbBorder: () => set((state) => ({ rgbBorderEnabled: !state.rgbBorderEnabled })),
   setRgbBorderSpeed: (speed) => set({ rgbBorderSpeed: speed }),
   setRgbBorderColors: (colors) => set({ rgbBorderColors: colors }),
@@ -67,8 +87,6 @@ export const useScrollerStore = create((set) => ({
   setLetterSpacing: (letterSpacing) => set({ letterSpacing }),
   setLineHeight: (lineHeight) => set({ lineHeight }),
   setColor: (color) => set({ color }),
-  setOutline: (outlineColor, outlineWidth) => set({ outlineColor, outlineWidth }),
-  setShadow: (shadowColor, shadowBlur) => set({ shadowColor, shadowBlur }),
   setReflection: (reflection) => set({ reflection }),
   setDirection: (direction) => set({ direction }),
   setSpeed: (speed) => set({ speed }),

@@ -21,6 +21,8 @@ const useIsMobile = () => {
   return isMobile;
 };
 
+
+
 export default function LEDDisplay() {
   const { 
     background, 
@@ -38,7 +40,7 @@ export default function LEDDisplay() {
   const isMobile = useIsMobile();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
-  const [showLandscapePrompt, setShowLandscapePrompt] = useState(false);
+  const [showLandscapeModal, setShowLandscapeModal] = useState(false);
 
   // Monitor fullscreen changes
   useEffect(() => {
@@ -75,8 +77,8 @@ export default function LEDDisplay() {
     const handleOrientationChange = () => {
       const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
       setIsLandscape(isCurrentlyLandscape);
-      if (isCurrentlyLandscape && showLandscapePrompt) {
-        setShowLandscapePrompt(false);
+      if (isCurrentlyLandscape && showLandscapeModal) {
+        setShowLandscapeModal(false);
       }
     };
 
@@ -88,7 +90,7 @@ export default function LEDDisplay() {
       window.removeEventListener('resize', handleOrientationChange);
       window.removeEventListener('orientationchange', handleOrientationChange);
     };
-  }, [showLandscapePrompt]);
+  }, [showLandscapeModal]);
 
   // Enter fullscreen landscape mode
   const enterFullscreenLandscape = async () => {
@@ -104,7 +106,7 @@ export default function LEDDisplay() {
           await displayRef.current.msRequestFullscreen();
         }
         if (isMobile && !isLandscape) {
-          setShowLandscapePrompt(true);
+          setShowLandscapeModal(true);
         }
       } catch (error) {
         console.error('Error entering fullscreen:', error);
@@ -134,9 +136,18 @@ export default function LEDDisplay() {
     }
   }, [isPlaying, isFullscreen]);
 
+  const handleConfirmLandscape = () => {
+    setShowLandscapeModal(false);
+  };
+
+  const handleCancelLandscape = () => {
+    setShowLandscapeModal(false);
+    togglePlay(); // Pause playback if user cancels
+  };
+
   const displayClasses = `
     led-display relative overflow-hidden border-2 border-gray-700 bg-black
-    ${isFullscreen ? 'fixed inset-0 z-50 w-screen h-screen rounded-none border-none' : 'h-64 w-full rounded-xl'}
+    ${isFullscreen ? 'fixed inset-0 z-40 w-screen h-screen rounded-none border-none' : 'h-64 w-full rounded-xl'}
   `;
 
   return (
@@ -203,60 +214,53 @@ export default function LEDDisplay() {
           )}
         </AnimatePresence>
 
-        {/* Landscape Orientation Prompt */}
+        {/* Landscape Modal - Positioned relative to the LED display */}
         <AnimatePresence>
-          {isFullscreen && isMobile && showLandscapePrompt && (
-            <motion.div
+          {showLandscapeModal && (
+            <motion.div 
+              className="absolut inset-0 b-black/80 backdrop-blur-md z-50 flex items-cente justify-cente p-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-20"
-              onClick={() => setShowLandscapePrompt(false)}
             >
-              <div className="text-center text-white p-8 max-w-md">
-                <motion.div
-                  animate={{ rotate: [0, 90, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="mx-auto mb-6 w-20 h-20 border-4 border-green-400 rounded-lg flex items-center justify-center"
-                >
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" className="text-green-400">
-                    <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03L12 2.03c1.33.07 2.59.32 3.81.7L18 5.92l-1.41 1.41-.69-.69c-.9-.24-1.84-.4-2.81-.46V2.52h1.39zm-.7 3.61c.81.25 1.58.59 2.28 1.01l1.14-1.14c-.96-.65-2.02-1.15-3.17-1.46l-.25 1.59zM12 19.96c-3.87-.78-6.8-3.71-7.58-7.58L2.42 12c.88 4.84 4.94 8.64 9.58 9.56v-1.6zm-1.71-1.71c1.33.07 2.59.32 3.81.7l2.19-3.19-1.41-1.41-.69.69c-.9.24-1.84.4-2.81.46v3.75h-1.09zm7.58-7.58c-.78-3.87-3.71-6.8-7.58-7.58L12 1.04c4.84.88 8.64 4.94 9.56 9.58h-1.6zm-15.73 0c.78 3.87 3.71 6.8 7.58 7.58L12 22.96c-4.84-.88-8.64-4.94-9.56-9.58h1.6z"/>
-                  </svg>
-                </motion.div>
-                
-                <motion.h3 
-                  className="text-2xl font-bold mb-4"
-                  animate={{ opacity: [0.7, 1, 0.7] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  Please Rotate Your Device
-                </motion.h3>
-                
-                <p className="text-lg text-gray-300 mb-6">
-                  For the best LED display experience, please rotate your device to landscape orientation.
-                </p>
-                
-                <div className="flex items-center justify-center gap-2 text-green-400">
-                  <span className="text-3xl">📱</span>
-                  <motion.span 
-                    className="text-2xl"
-                    animate={{ rotate: [0, 90] }}
-                    transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
-                  >
-                    ↻
-                  </motion.span>
-                  <span className="text-3xl">📱</span>
+              <motion.div 
+                className="bg-gray-800/90 backdrop-blur-lg border border-green-500/30 rounded-xl p-6 max-w-md w-full mx-4"
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              >
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" className="text-green-400">
+                      <path d="M19 12v-1c0-1.33-2.67-2-4-2-1.33 0-4 .67-4 2v1c0 1.33 2.67 2 4 2 1.33 0 4-.67 4-2zm-4-6c-1.11 0-2 .89-2 2v.5c0 .83.67 1.5 1.5 1.5h1c.83 0 1.5-.67 1.5-1.5V8c0-1.11-.89-2-2-2zm6-2h-4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 0H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-green-400 mb-2">Landscape Mode Required</h3>
+                  <p className="text-gray-300">
+                    For the best experience, please rotate your device to landscape orientation.
+                  </p>
                 </div>
-
-                <motion.button
-                  className="mt-6 px-6 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white font-medium"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowLandscapePrompt(false)}
-                >
-                  Continue Anyway
-                </motion.button>
-              </div>
+                
+                <div className="flex flex-col gap-3">
+                  <motion.button
+                    onClick={handleConfirmLandscape}
+                    className="py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    I've Rotated My Device
+                  </motion.button>
+                  <motion.button
+                    onClick={handleCancelLandscape}
+                    className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Cancel
+                  </motion.button>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
