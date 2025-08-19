@@ -1,8 +1,92 @@
-// components/LEDDisplay.jsx
-import Background from './Background';
-import ScrollingText from './ScrollingText';
-import LEDEffects from './LEDEffect';
-import { useScrollerStore } from '../../stores/useScrollerStore';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Mock components for demonstration
+const Background = ({ type, color }) => (
+  <div className={`absolute inset-0 ${type === 'gradient' ? 'bg-gradient-to-r from-blue-900 to-purple-900' : 'bg-black'}`} 
+       style={{ backgroundColor: type === 'solid' ? color : undefined }} />
+);
+
+const ScrollingText = ({ text, color, speed, isPlaying }) => (
+  <div className="absolute inset-0 flex items-center overflow-hidden">
+    <motion.div
+      className="whitespace-nowrap text-4xl font-mono font-bold"
+      style={{ 
+        color: color || '#00ff41',
+        textShadow: `0 0 10px ${color || '#00ff41'}, 0 0 20px ${color || '#00ff41'}`,
+      }}
+      animate={isPlaying ? {
+        x: [window.innerWidth, -2000]
+      } : {}}
+      transition={isPlaying ? {
+        duration: 20 - (speed || 5),
+        repeat: Infinity,
+        ease: "linear"
+      } : {}}
+    >
+      {text || "LED DISPLAY"}
+    </motion.div>
+  </div>
+);
+
+const LEDEffects = ({ frameStyle, cornerLights }) => (
+  <div className="absolute inset-0 pointer-events-none">
+    {/* LED Grid Effect */}
+    <div className="absolute inset-0 opacity-20"
+         style={{
+           backgroundImage: `
+             linear-gradient(90deg, transparent 98%, #00ff41 100%),
+             linear-gradient(0deg, transparent 98%, #00ff41 100%)
+           `,
+           backgroundSize: '4px 4px'
+         }} />
+    
+    {/* Corner Lights */}
+    {cornerLights && (
+      <>
+        {['top-left', 'top-right', 'bottom-left', 'bottom-right'].map((corner) => (
+          <motion.div
+            key={corner}
+            className={`absolute w-4 h-4 rounded-full bg-red-500 ${
+              corner.includes('top') ? 'top-2' : 'bottom-2'
+            } ${corner.includes('left') ? 'left-2' : 'right-2'}`}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1, repeat: Infinity }}
+          />
+        ))}
+      </>
+    )}
+  </div>
+);
+
+// Mock store hook
+const useScrollerStore = () => ({
+  background: 'solid',
+  bgColor: '#000000',
+  frameStyle: 'modern',
+  cornerLights: true,
+  text: 'Welcome to LED Scroller!',
+  color: '#00ff41',
+  speed: 5,
+  isPlaying: false
+});
+
+// Mobile detection hook
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkDevice = () => {
+      setIsMobile(window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    };
+    
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
+  }, []);
+
+  return isMobile;
+};
 
 export default function LEDDisplay() {
   const { 
@@ -16,30 +100,279 @@ export default function LEDDisplay() {
     isPlaying
   } = useScrollerStore();
   
+  const displayRef = useRef(null);
+  const isMobile = useIsMobile();
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
+
+  // Monitor fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement || 
+        document.webkitFullscreenElement || 
+        document.mozFullScreenElement || 
+        document.msFullscreenElement
+      );
+      setIsFullscreen(isCurrentlyFullscreen);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Monitor orientation changes
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      // Check if device is in landscape
+      const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
+      setIsLandscape(isCurrentlyLandscape);
+    };
+
+    handleOrientationChange(); // Initial check
+    window.addEventListener('resize', handleOrientationChange);
+    window.addEventListener('orientationchange', handleOrientationChange);
+
+    return () => {
+      window.removeEventListener('resize', handleOrientationChange);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, []);
+
+  // Function to enter fullscreen landscape mode
+  const enterFullscreenLandscape = async () => {
+    if (displayRef.current) {
+      try {
+        // Request fullscreen
+        if (displayRef.current.requestFullscreen) {
+          await displayRef.current.requestFullscreen();
+        } else if (displayRef.current.webkitRequestFullscreen) {
+          await displayRef.current.webkitRequestFullscreen();
+        } else if (displayRef.current.mozRequestFullScreen) {
+          await displayRef.current.mozRequestFullScreen();
+        } else if (displayRef.current.msRequestFullscreen) {
+          await displayRef.current.msRequestFullscreen();
+        }
+
+        // Try to lock orientation to landscape if on mobile
+        if (isMobile && screen.orientation && screen.orientation.lock) {
+          try {
+            await screen.orientation.lock('landscape');
+          } catch (e) {
+            console.log('Could not lock orientation:', e);
+          }
+        }
+      } catch (error) {
+        console.error('Error entering fullscreen:', error);
+      }
+    }
+  };
+
+  // Auto-enter fullscreen when playing starts on mobile
+  useEffect(() => {
+    if (isPlaying && isMobile) {
+      enterFullscreenLandscape();
+    }
+  }, [isPlaying, isMobile]);
+
+  // Exit fullscreen when not playing
+  useEffect(() => {
+    if (!isPlaying && isFullscreen) {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
+  }, [isPlaying, isFullscreen]);
+
+  // Dynamic classes based on fullscreen and mobile state
+  const displayClasses = `
+    led-display relative overflow-hidden border-2 border-gray-700 bg-black
+    ${isFullscreen 
+      ? 'fixed inset-0 z-50 w-screen h-screen rounded-none border-none' 
+      : 'h-64 w-full rounded-xl'
+    }
+    ${isFullscreen && isMobile && !isLandscape ? 'landscape-prompt' : ''}
+  `;
+
   return (
-    <div className="relative h-64 w-full rounded-xl overflow-hidden border-2 border-gray-700 bg-black">
-      {/* Background Layer */}
-      <Background type={background} color={bgColor} />
-      
-      {/* LED Screen Effect */}
-      <div className="absolute inset-0 led-screen-effect"></div>
-      
-      {/* Scrolling Text */}
-      <ScrollingText
-        text={text}
-        color={color}
-        speed={speed}
-        isPlaying={isPlaying}
-      />
-      
-      {/* Visual Effects */}
-      <LEDEffects 
-        frameStyle={frameStyle} 
-        cornerLights={cornerLights} 
-      />
-      
-      {/* Reflection Effect (if enabled) */}
-      <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black to-transparent opacity-50"></div>
-    </div>
+    <>
+      <div 
+        ref={displayRef}
+        className={displayClasses}
+      >
+        {/* Background Layer */}
+        <Background type={background} color={bgColor} />
+        
+        {/* LED Screen Effect */}
+        <div className="absolute inset-0">
+          {/* Scanlines effect */}
+          <div className="absolute inset-0 opacity-20 pointer-events-none"
+               style={{
+                 backgroundImage: 'linear-gradient(transparent 50%, rgba(0, 255, 65, 0.1) 50%)',
+                 backgroundSize: '100% 4px'
+               }} />
+          
+          {/* CRT curve effect in fullscreen */}
+          {isFullscreen && (
+            <div className="absolute inset-0 bg-black opacity-20 pointer-events-none"
+                 style={{
+                   borderRadius: isFullscreen ? '0' : '12px',
+                   boxShadow: 'inset 0 0 50px rgba(0, 0, 0, 0.8)'
+                 }} />
+          )}
+        </div>
+        
+        {/* Scrolling Text */}
+        <ScrollingText
+          text={text}
+          color={color}
+          speed={speed}
+          isPlaying={isPlaying}
+        />
+        
+        {/* Visual Effects */}
+        <LEDEffects 
+          frameStyle={frameStyle} 
+          cornerLights={cornerLights} 
+        />
+        
+        {/* Reflection Effect */}
+        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black to-transparent opacity-50"></div>
+
+        {/* Fullscreen Controls (only visible in fullscreen) */}
+        <AnimatePresence>
+          {isFullscreen && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute top-4 right-4 z-10 flex gap-2"
+            >
+              <motion.button
+                onClick={() => {
+                  if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                  }
+                }}
+                className="p-3 bg-black/50 backdrop-blur-sm rounded-full text-white/80 hover:text-white hover:bg-black/70 transition-all"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+                </svg>
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Landscape Orientation Prompt (for mobile in fullscreen) */}
+        <AnimatePresence>
+          {isFullscreen && isMobile && !isLandscape && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-20"
+            >
+              <div className="text-center text-white p-8">
+                <motion.div
+                  animate={{ rotate: [0, 90, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="mx-auto mb-6 w-20 h-20 border-4 border-green-400 rounded-lg flex items-center justify-center"
+                >
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" className="text-green-400">
+                    <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03L12 2.03c1.33.07 2.59.32 3.81.7L18 5.92l-1.41 1.41-.69-.69c-.9-.24-1.84-.4-2.81-.46V2.52h1.39zm-.7 3.61c.81.25 1.58.59 2.28 1.01l1.14-1.14c-.96-.65-2.02-1.15-3.17-1.46l-.25 1.59zM12 19.96c-3.87-.78-6.8-3.71-7.58-7.58L2.42 12c.88 4.84 4.94 8.64 9.58 9.56v-1.6zm-1.71-1.71c1.33.07 2.59.32 3.81.7l2.19-3.19-1.41-1.41-.69.69c-.9.24-1.84.4-2.81.46v3.75h-1.09zm7.58-7.58c-.78-3.87-3.71-6.8-7.58-7.58L12 1.04c4.84.88 8.64 4.94 9.56 9.58h-1.6zm-15.73 0c.78 3.87 3.71 6.8 7.58 7.58L12 22.96c-4.84-.88-8.64-4.94-9.56-9.58h1.6z"/>
+                  </svg>
+                </motion.div>
+                
+                <motion.h3 
+                  className="text-2xl font-bold mb-4"
+                  animate={{ opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  Please Rotate Your Device
+                </motion.h3>
+                
+                <p className="text-lg text-gray-300 mb-6">
+                  For the best LED display experience, please rotate your device to landscape orientation.
+                </p>
+                
+                <div className="flex items-center justify-center gap-2 text-green-400">
+                  <span className="text-3xl">📱</span>
+                  <motion.span 
+                    className="text-2xl"
+                    animate={{ rotate: [0, 90] }}
+                    transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
+                  >
+                    ↻
+                  </motion.span>
+                  <span className="text-3xl">📱</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Add custom CSS for LED effects */}
+      <style jsx>{`
+        .led-display {
+          position: relative;
+        }
+        
+        .led-display::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: 
+            linear-gradient(90deg, transparent 98%, rgba(0, 255, 65, 0.1) 100%),
+            linear-gradient(0deg, transparent 98%, rgba(0, 255, 65, 0.1) 100%);
+          background-size: 4px 4px;
+          pointer-events: none;
+          opacity: 0.3;
+        }
+
+        /* Enhanced fullscreen styles */
+        .led-display:fullscreen,
+        .led-display:-webkit-full-screen,
+        .led-display:-moz-full-screen {
+          border-radius: 0 !important;
+          border: none !important;
+        }
+
+        /* Landscape orientation media query */
+        @media screen and (orientation: landscape) and (max-height: 500px) {
+          .led-display:fullscreen .scrolling-text {
+            font-size: 4rem;
+          }
+        }
+
+        /* Portrait orientation warning */
+        @media screen and (orientation: portrait) and (max-width: 500px) {
+          .led-display:fullscreen {
+            background: #000;
+          }
+        }
+      `}</style>
+    </>
   );
 }
