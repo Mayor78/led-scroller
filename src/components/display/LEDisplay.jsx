@@ -1,34 +1,60 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useScrollerStore } from '../../stores/useScrollerStore';
 
-// Mock components for demonstration
-const Background = ({ type, color }) => (
-  <div className={`absolute inset-0 ${type === 'gradient' ? 'bg-gradient-to-r from-blue-900 to-purple-900' : 'bg-black'}`} 
-       style={{ backgroundColor: type === 'solid' ? color : undefined }} />
-);
+// Background Component
+const Background = ({ type, color }) => {
+  if (type === 'gradient') {
+    return (
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-900 to-purple-900" />
+    );
+  } else if (type === 'solid') {
+    return (
+      <div 
+        className="absolute inset-0" 
+        style={{ backgroundColor: color }} 
+      />
+    );
+  }
+  return <div className="absolute inset-0 bg-black" />;
+};
 
-const ScrollingText = ({ text, color, speed, isPlaying }) => (
-  <div className="absolute inset-0 flex items-center overflow-hidden">
-    <motion.div
-      className="whitespace-nowrap text-4xl font-mono font-bold"
-      style={{ 
-        color: color || '#00ff41',
-        textShadow: `0 0 10px ${color || '#00ff41'}, 0 0 20px ${color || '#00ff41'}`,
-      }}
-      animate={isPlaying ? {
-        x: [window.innerWidth, -2000]
-      } : {}}
-      transition={isPlaying ? {
-        duration: 20 - (speed || 5),
-        repeat: Infinity,
-        ease: "linear"
-      } : {}}
-    >
-      {text || "LED DISPLAY"}
-    </motion.div>
-  </div>
-);
+// ScrollingText Component with improved animation
+const ScrollingText = ({ text, color, speed, isPlaying }) => {
+  const textRef = useRef(null);
+  const [textWidth, setTextWidth] = useState(0);
 
+  useEffect(() => {
+    if (textRef.current) {
+      setTextWidth(textRef.current.scrollWidth);
+    }
+  }, [text]);
+
+  return (
+    <div className="absolute inset-0 flex items-center overflow-hidden">
+      <motion.div
+        ref={textRef}
+        className="whitespace-nowrap text-4xl font-mono font-bold px-4"
+        style={{ 
+          color: color || '#00ff41',
+          textShadow: `0 0 10px ${color || '#00ff41'}, 0 0 20px ${color || '#00ff41'}`,
+        }}
+        animate={isPlaying ? {
+          x: [window.innerWidth, -textWidth]
+        } : { x: 0 }}
+        transition={isPlaying ? {
+          duration: 30 - (speed * 3),
+          repeat: Infinity,
+          ease: "linear"
+        } : {}}
+      >
+        {text || "LED DISPLAY"}
+      </motion.div>
+    </div>
+  );
+};
+
+// LEDEffects Component
 const LEDEffects = ({ frameStyle, cornerLights }) => (
   <div className="absolute inset-0 pointer-events-none">
     {/* LED Grid Effect */}
@@ -59,18 +85,6 @@ const LEDEffects = ({ frameStyle, cornerLights }) => (
   </div>
 );
 
-// Mock store hook
-const useScrollerStore = () => ({
-  background: 'solid',
-  bgColor: '#000000',
-  frameStyle: 'modern',
-  cornerLights: true,
-  text: 'Welcome to LED Scroller!',
-  color: '#00ff41',
-  speed: 5,
-  isPlaying: false
-});
-
 // Mobile detection hook
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -97,13 +111,15 @@ export default function LEDDisplay() {
     text,
     color,
     speed,
-    isPlaying
+    isPlaying,
+    togglePlay
   } = useScrollerStore();
   
   const displayRef = useRef(null);
   const isMobile = useIsMobile();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
+  const [showLandscapePrompt, setShowLandscapePrompt] = useState(false);
 
   // Monitor fullscreen changes
   useEffect(() => {
@@ -115,6 +131,11 @@ export default function LEDDisplay() {
         document.msFullscreenElement
       );
       setIsFullscreen(isCurrentlyFullscreen);
+      
+      // If we're exiting fullscreen, pause the playback
+      if (!isCurrentlyFullscreen && isPlaying) {
+        togglePlay();
+      }
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -128,7 +149,7 @@ export default function LEDDisplay() {
       document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
-  }, []);
+  }, [isPlaying, togglePlay]);
 
   // Monitor orientation changes
   useEffect(() => {
@@ -136,6 +157,11 @@ export default function LEDDisplay() {
       // Check if device is in landscape
       const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
       setIsLandscape(isCurrentlyLandscape);
+      
+      // Hide landscape prompt if device is now in landscape
+      if (isCurrentlyLandscape) {
+        setShowLandscapePrompt(false);
+      }
     };
 
     handleOrientationChange(); // Initial check
@@ -163,13 +189,9 @@ export default function LEDDisplay() {
           await displayRef.current.msRequestFullscreen();
         }
 
-        // Try to lock orientation to landscape if on mobile
-        if (isMobile && screen.orientation && screen.orientation.lock) {
-          try {
-            await screen.orientation.lock('landscape');
-          } catch (e) {
-            console.log('Could not lock orientation:', e);
-          }
+        // On mobile, show landscape prompt if not in landscape
+        if (isMobile && !isLandscape) {
+          setShowLandscapePrompt(true);
         }
       } catch (error) {
         console.error('Error entering fullscreen:', error);
@@ -206,7 +228,6 @@ export default function LEDDisplay() {
       ? 'fixed inset-0 z-50 w-screen h-screen rounded-none border-none' 
       : 'h-64 w-full rounded-xl'
     }
-    ${isFullscreen && isMobile && !isLandscape ? 'landscape-prompt' : ''}
   `;
 
   return (
@@ -283,14 +304,15 @@ export default function LEDDisplay() {
 
         {/* Landscape Orientation Prompt (for mobile in fullscreen) */}
         <AnimatePresence>
-          {isFullscreen && isMobile && !isLandscape && (
+          {isFullscreen && isMobile && showLandscapePrompt && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-20"
+              onClick={() => setShowLandscapePrompt(false)}
             >
-              <div className="text-center text-white p-8">
+              <div className="text-center text-white p-8 max-w-md">
                 <motion.div
                   animate={{ rotate: [0, 90, 0] }}
                   transition={{ duration: 2, repeat: Infinity }}
@@ -324,6 +346,15 @@ export default function LEDDisplay() {
                   </motion.span>
                   <span className="text-3xl">📱</span>
                 </div>
+
+                <motion.button
+                  className="mt-6 px-6 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white font-medium"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowLandscapePrompt(false)}
+                >
+                  Continue Anyway
+                </motion.button>
               </div>
             </motion.div>
           )}
