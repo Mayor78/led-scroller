@@ -1,72 +1,188 @@
 import React, { useState, useEffect } from 'react';
-import { useScrollerStore } from '../../stores/useScrollerStore';
-import { FaChevronRight, FaChevronDown, FaPalette, FaSave, FaUpload, FaUnderline, FaSyncAlt } from "react-icons/fa";
-import { FaInfo,  } from "react-icons/fa6";
-import { MdOutlinePauseCircleOutline, MdPlayArrow, MdHelpOutline, MdSwapHoriz } from "react-icons/md";
 import { motion, AnimatePresence } from 'framer-motion';
-import FontControls from './FontControls';
-import ColorControls from './ColorControls';
-import SpeedControl from './SpeedControl';
-import BackgroundSelector from './BackgroundSelector';
-import FlickerControls from './FlickerControls';
-import AudioControls from './AudioControls';
-import ExportControls from './ExportControls';
-import EffectControls from './EffectControls';
-import RgbBorderControls from './RgbBorderControls';
-import PresetManager from '../../contexts/PresetManager';
-import TextLimiter from '../display/TextLimiter';
+import { 
+  FaChevronRight, 
+  FaChevronDown, 
+  FaPalette, 
+  FaSave, 
+  FaUpload, 
+  FaUnderline,
+  FaPlay,
+  FaPause,
+  FaMagic,
+  FaBolt,
+  FaEye,
+  FaRocket,
+  FaMobile,
+  FaExpand
+} from "react-icons/fa";
+import { 
+  FaInfo, 
+  FaPallet,
+  FaWandMagicSparkles,
+  FaGear
+} from "react-icons/fa6";
+import { 
+  MdOutlinePauseCircleOutline, 
+  MdPlayArrow, 
+  MdHelpOutline,
+  MdFullscreen,
+  MdScreenRotation,
+  MdClose
+} from "react-icons/md";
 
-// Animation constants
-const sectionAnimations = {
-  open: { opacity: 1, height: "auto" },
-  collapsed: { opacity: 0, height: 0 }
+// Mock store hook for demonstration
+const useScrollerStore = () => {
+  const [text, setText] = useState('Welcome to LED Scroller!');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [background, setBackground] = useState('solid');
+  const [speed, setSpeed] = useState(5);
+  
+  return {
+    text,
+    setText,
+    isPlaying,
+    togglePlay: () => setIsPlaying(!isPlaying),
+    background,
+    speed
+  };
 };
 
-const ControlSection = ({ title, children, defaultOpen = false }) => {
+// Mobile Detection Hook
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkDevice = () => {
+      setIsMobile(window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    };
+    
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
+  }, []);
+
+  return isMobile;
+};
+
+// Landscape Modal Component
+const LandscapeModal = ({ isOpen, onClose, onConfirm }) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 max-w-md w-full border border-green-500/30 shadow-2xl"
+          >
+            <div className="text-center">
+              <motion.div
+                animate={{ rotate: [0, 90, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="mx-auto mb-4 w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center"
+              >
+                <MdScreenRotation size={32} className="text-green-400" />
+              </motion.div>
+              
+              <h3 className="text-xl font-bold text-white mb-2">
+                Rotate to Landscape
+              </h3>
+              
+              <p className="text-gray-300 mb-6">
+                For the best LED display experience, please rotate your device to landscape mode. 
+                The display will automatically enter fullscreen.
+              </p>
+              
+              <div className="flex gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onClose}
+                  className="flex-1 py-3 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </motion.button>
+                
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onConfirm}
+                  className="flex-1 py-3 px-4 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <MdFullscreen size={18} />
+                  Continue
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+// Unique Control Section with Neon Theme
+const ControlSection = ({ title, children, defaultOpen = false, icon: Icon, color = "green" }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  const colorVariants = {
+    green: "from-green-500/20 to-emerald-500/20 border-green-500/30",
+    blue: "from-blue-500/20 to-cyan-500/20 border-blue-500/30",
+    purple: "from-purple-500/20 to-pink-500/20 border-purple-500/30",
+    orange: "from-orange-500/20 to-red-500/20 border-orange-500/30"
+  };
 
   return (
     <motion.div 
-      className="bg-gray-900/70 backdrop-blur-lg rounded-xl overflow-hidden border border-gray-800/50 glass-effect"
+      className={`bg-gradient-to-r ${colorVariants[color]} backdrop-blur-sm rounded-2xl overflow-hidden border-2 shadow-lg`}
       initial={false}
       animate={{ 
-        boxShadow: isOpen ? "0 0 15px rgba(0, 255, 100, 0.3)" : "none"
+        boxShadow: isOpen ? `0 0 20px rgba(0, 255, 0, 0.3)` : "0 0 5px rgba(0, 0, 0, 0.2)"
       }}
       transition={{ duration: 0.3 }}
     >
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex justify-between items-center p-4 hover:bg-gray-800/50 transition-all"
-        whileHover={{ x: 2 }}
+        className="w-full flex justify-between items-center p-4 hover:bg-white/10 transition-all"
+        whileHover={{ x: 4 }}
+        whileTap={{ scale: 0.98 }}
       >
-        <div className="flex items-center gap-2">
-          <motion.span 
-            animate={{ rotate: isOpen ? 90 : 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <FaChevronRight size={18} className="text-green-400" />
-          </motion.span>
-          <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-300">
-            {title}
-          </h3>
+        <div className="flex items-center gap-3">
+          {Icon && (
+            <motion.div
+              animate={{ rotate: isOpen ? 360 : 0 }}
+              transition={{ duration: 0.5 }}
+              className="p-2 rounded-full bg-white/10"
+            >
+              <Icon size={20} className="text-white" />
+            </motion.div>
+          )}
+          <h3 className="text-lg font-bold text-white">{title}</h3>
         </div>
+        
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.3 }}
         >
-          <FaChevronDown className="text-gray-400" />
+          <FaChevronDown className="text-white/70" />
         </motion.div>
       </motion.button>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial="collapsed"
-            animate="open"
-            exit="collapsed"
-            variants={sectionAnimations}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="p-4 space-y-4"
+            className="p-4 space-y-4 bg-black/20"
           >
             {children}
           </motion.div>
@@ -76,392 +192,393 @@ const ControlSection = ({ title, children, defaultOpen = false }) => {
   );
 };
 
+// Quick Action Button Component
+const QuickActionButton = ({ icon: Icon, label, onClick, color = "green", active = false }) => {
+  const colorClasses = {
+    green: active ? "bg-green-500 text-white" : "bg-green-500/20 text-green-400 hover:bg-green-500/30",
+    blue: active ? "bg-blue-500 text-white" : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30",
+    purple: active ? "bg-purple-500 text-white" : "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30",
+    orange: active ? "bg-orange-500 text-white" : "bg-orange-500/20 text-orange-400 hover:bg-orange-500/30"
+  };
+
+  return (
+    <motion.button
+      onClick={onClick}
+      className={`p-3 rounded-xl transition-all ${colorClasses[color]} border border-current/30`}
+      whileHover={{ scale: 1.05, rotate: 5 }}
+      whileTap={{ scale: 0.95 }}
+      title={label}
+    >
+      <Icon size={20} />
+    </motion.button>
+  );
+};
+
+// Main Control Panel Component
 const ControlPanel = () => {
-  const { text, setText, isPlaying, togglePlay, background, speed, setSpeed, setBackground } = useScrollerStore();
-  const [activeHelp, setActiveHelp] = useState(null);
-  const [currentTheme, setCurrentTheme] = useState('matrix');
-  const [isMirrored, setIsMirrored] = useState(false);
-  const [scrollDirection, setScrollDirection] = useState('left');
-  const [brightness, setBrightness] = useState(1);
-  const [showModal, setShowModal] = useState(false);
-  const [presets] = useState([
-    { name: "Matrix", colors: ["#00ff00", "#001a00"], bg: "matrix" },
-    { name: "Neon", colors: ["#ff00ff", "#110011"], bg: "neon" },
-    { name: "Cyber", colors: ["#00ffff", "#001a33"], bg: "cyber" }
-  ]);
+  const { text, setText, isPlaying, togglePlay, background, speed } = useScrollerStore();
+  const isMobile = useIsMobile();
+  const [showLandscapeModal, setShowLandscapeModal] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState('cyberpunk');
+  const [aiMode, setAiMode] = useState(false);
+  const [visualizerMode, setVisualizerMode] = useState(false);
 
   const themes = {
-    matrix: { primary: "#00ff41", bg: "#000" },
-    cyber: { primary: "#00ff9d", bg: "#0a0e17" },
-    neon: { primary: "#ff00ff", bg: "#110011" }
-  };
-
-  // Detect mobile and handle play toggle
-  useEffect(() => {
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile && !isPlaying && togglePlay) {
-      setShowModal(true);
+    cyberpunk: { 
+      primary: "from-green-400 to-emerald-500", 
+      bg: "from-gray-900 via-green-900/20 to-gray-900",
+      accent: "green"
+    },
+    neon: { 
+      primary: "from-pink-400 to-purple-500", 
+      bg: "from-gray-900 via-purple-900/20 to-gray-900",
+      accent: "purple"
+    },
+    cyber: { 
+      primary: "from-cyan-400 to-blue-500", 
+      bg: "from-gray-900 via-blue-900/20 to-gray-900",
+      accent: "blue"
+    },
+    retro: { 
+      primary: "from-orange-400 to-red-500", 
+      bg: "from-gray-900 via-orange-900/20 to-gray-900",
+      accent: "orange"
     }
-  }, [isPlaying, togglePlay]);
+  };
 
   const handlePlayToggle = () => {
-    if (window.innerWidth <= 768 && !isPlaying) {
-      setShowModal(true);
-      return;
-    }
-    togglePlay();
-    if (!isPlaying) {
-      const element = document.querySelector('.led-display');
-      if (element?.requestFullscreen) {
-        element.requestFullscreen().catch(e => console.log("Fullscreen error:", e));
-      }
+    if (!isPlaying && isMobile) {
+      setShowLandscapeModal(true);
+    } else {
+      togglePlay();
+      enterFullscreen();
     }
   };
 
-  const confirmLandscape = () => {
-    setShowModal(false);
-    togglePlay();
-    const element = document.querySelector('.led-display');
+  const enterFullscreen = () => {
+    const element = document.querySelector('.led-display') || document.documentElement;
     if (element?.requestFullscreen) {
       element.requestFullscreen().catch(e => console.log("Fullscreen error:", e));
     }
   };
 
-  const cancelLandscape = () => {
-    setShowModal(false);
+  const handleLandscapeConfirm = () => {
+    setShowLandscapeModal(false);
+    togglePlay();
+    
+    // Force landscape orientation if supported
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(e => console.log("Orientation lock error:", e));
+    }
+    
+    enterFullscreen();
+  };
+
+  const generateAIText = () => {
+    const aiTexts = [
+      "✨ WELCOME TO THE FUTURE ✨",
+      "🚀 CYBERPUNK VIBES ACTIVATED 🚀",
+      "💫 NEON DREAMS LOADING... 💫",
+      "⚡ DIGITAL REVOLUTION NOW ⚡",
+      "🌟 MATRIX MODE ENGAGED 🌟"
+    ];
+    setText(aiTexts[Math.floor(Math.random() * aiTexts.length)]);
+    setAiMode(true);
+    setTimeout(() => setAiMode(false), 2000);
   };
 
   return (
-    <motion.div 
-      className="bg-gray-900/80 backdrop-blur-xl p-6 rounded-2xl shadow-lg space-y-6 border border-gray-800/60 glass-effect"
-      style={{
-        '--primary': themes[currentTheme].primary,
-        '--bg': themes[currentTheme].bg,
-        background: `linear-gradient(135deg, rgba(0, 0, 0, 0.8), var(--bg))`
-      }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {/* Header with theme and preset selector */}
-      <motion.div className="flex justify-between items-center mb-4">
-        <motion.h2 
-          className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-300"
-          whileHover={{ scale: 1.02 }}
-        >
-          HOLO SCROLLER CONTROL
-        </motion.h2>
-        <div className="flex gap-2">
+    <>
+      <motion.div 
+        className={`bg-gradient-to-br ${themes[currentTheme].bg} backdrop-blur-md p-6 rounded-3xl shadow-2xl space-y-6 border-2 border-white/20 relative overflow-hidden`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 opacity-10">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-current rounded-full"
+              animate={{
+                x: [0, Math.random() * 400],
+                y: [0, Math.random() * 400],
+                opacity: [0, 1, 0]
+              }}
+              transition={{
+                duration: Math.random() * 3 + 2,
+                repeat: Infinity,
+                delay: Math.random() * 2
+              }}
+              style={{
+                left: Math.random() * 100 + '%',
+                top: Math.random() * 100 + '%'
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Header with Theme Selector */}
+        <motion.div className="flex justify-between items-center relative z-10">
+          <motion.h2 
+            className={`text-2xl font-bold bg-gradient-to-r ${themes[currentTheme].primary} bg-clip-text text-transparent`}
+            whileHover={{ scale: 1.02 }}
+          >
+            🚀 QUANTUM LED CONTROLLER
+          </motion.h2>
+          
           <select
             value={currentTheme}
             onChange={(e) => setCurrentTheme(e.target.value)}
-            className="bg-gray-800 text-white px-3 py-1 rounded-lg border border-gray-700 hover:border-green-500 transition-all"
+            className="bg-black/50 text-white text-sm rounded-xl px-3 py-2 border border-white/30 backdrop-blur-sm"
           >
             {Object.keys(themes).map(theme => (
               <option key={theme} value={theme}>{theme.toUpperCase()}</option>
             ))}
           </select>
-          <select
-            onChange={(e) => {
-              const preset = presets.find(p => p.name === e.target.value);
-              setBackground(preset.bg);
-              setCurrentTheme(preset.name.toLowerCase());
-            }}
-            className="bg-gray-800 text-white px-3 py-1 rounded-lg border border-gray-700 hover:border-green-500 transition-all"
-          >
-            <option value="">Load Preset</option>
-            {presets.map(preset => (
-              <option key={preset.name} value={preset.name}>{preset.name}</option>
-            ))}
-          </select>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      {/* Quick Access Toolbar */}
-      <motion.div 
-        className="flex justify-center gap-3 p-2 bg-gray-800/50 rounded-xl glow-pulse"
-        whileHover={{ scale: 1.02 }}
-      >
-        <motion.button
-          className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 text-green-400 glow"
-          whileHover={{ scale: 1.15 }}
-          whileTap={{ scale: 0.9 }}
+        {/* Quick Action Toolbar */}
+        <motion.div 
+          className="flex justify-center gap-4 p-4 bg-black/30 rounded-2xl border border-white/20"
+          whileHover={{ scale: 1.01 }}
         >
-          <FaPalette size={18} />
-        </motion.button>
-        <motion.button
-          className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 text-green-400 glow"
-          whileHover={{ scale: 1.15 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <FaSave size={18} />
-        </motion.button>
-      </motion.div>
-
-      {/* Text Input & Playback */}
-      <motion.div 
-        className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-800/30 p-4 rounded-xl border border-gray-700/30 glow-pulse"
-        whileHover={{ scale: 1.01 }}
-      >
-        <div className="md:col-span-2">
-          <div className="flex items-center gap-2 mb-2">
-            <label className="text-sm font-medium text-gray-300">Display Text</label>
-            <div className="relative group">
-              <FaInfo size={14} className="text-gray-400 hover:text-white cursor-help" />
-              <div className="absolute z-10 hidden group-hover:block w-64 p-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg text-xs">
-                Type your message here. It will scroll across the LED display.
-              </div>
-            </div>
-          </div>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="w-full bg-gray-700/70 text-white p-3 rounded-md border border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500 transition-all"
-            rows={3}
-            placeholder="Enter your holographic message..."
+          <QuickActionButton 
+            icon={FaMagic} 
+            label="AI Generate" 
+            onClick={generateAIText}
+            color={themes[currentTheme].accent}
+            active={aiMode}
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <motion.button
-            onClick={handlePlayToggle}
-            className={`w-full py-3 px-4 rounded-md font-bold flex items-center justify-center gap-2 transition-all ${
-              isPlaying ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700'
-            } glow-pulse text-white`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {isPlaying ? (
-              <>
-                <MdOutlinePauseCircleOutline size={20} /> PAUSE
-              </>
-            ) : (
-              <>
-                <MdPlayArrow size={20} /> PLAY
-              </>
-            )}
-          </motion.button>
-          <motion.div 
-            className="flex items-center gap-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <FaSave size={16} className="text-gray-400" />
-            <input
-              type="range"
-              min="0.1"
-              max="2"
-              step="0.1"
-              value={brightness}
-              onChange={(e) => setBrightness(parseFloat(e.target.value))}
-              className="w-full accent-green-500"
+          <QuickActionButton 
+            icon={FaBolt} 
+            label="Speed Boost" 
+            onClick={() => {}}
+            color={themes[currentTheme].accent}
+          />
+          <QuickActionButton 
+            icon={FaEye} 
+            label="Visualizer" 
+            onClick={() => setVisualizerMode(!visualizerMode)}
+            color={themes[currentTheme].accent}
+            active={visualizerMode}
+          />
+          <QuickActionButton 
+            icon={FaRocket} 
+            label="Blast Mode" 
+            onClick={() => {}}
+            color={themes[currentTheme].accent}
+          />
+        </motion.div>
+
+        {/* Text Input & Enhanced Playback */}
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-black/30 p-6 rounded-2xl border border-white/20"
+          whileHover={{ scale: 1.005 }}
+        >
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-2 mb-3">
+              <label className="text-lg font-bold text-white">
+                💬 Quantum Message
+              </label>
+              <motion.div 
+                className="relative group"
+                whileHover={{ scale: 1.1 }}
+              >
+                <FaInfo size={16} className="text-white/70 hover:text-white cursor-help" />
+                <div className="absolute z-10 hidden group-hover:block w-64 p-3 bg-black/90 
+                                border border-white/30 rounded-xl shadow-xl text-sm backdrop-blur-sm">
+                  🚀 Enter your cosmic message here! Use emojis for extra flair ✨
+                </div>
+              </motion.div>
+            </div>
+            
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              className="w-full bg-black/50 text-white p-4 rounded-xl border-2 border-white/30 
+                         focus:border-green-500 focus:ring-2 focus:ring-green-500/30 
+                         backdrop-blur-sm transition-all"
+              rows={3}
+              placeholder="🌟 Enter your stellar message... ✨"
             />
-          </motion.div>
-        </div>
-      </motion.div>
-
-      {/* Preset Buttons */}
-      <motion.div className="flex flex-wrap gap-3">
-        {presets.map((preset) => (
-          <motion.button
-            key={preset.name}
-            onClick={() => {
-              setBackground(preset.bg);
-              setCurrentTheme(preset.name.toLowerCase());
-            }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-sm bg-gray-800/70 hover:bg-gray-700/70 transition-all glow"
-            style={{ 
-              borderLeft: `4px solid ${preset.colors[0]}`,
-              borderRight: `4px solid ${preset.colors[1]}`
-            }}
-          >
-            {preset.name} <span className="text-xl">{preset.icon}</span>
-          </motion.button>
-        ))}
-      </motion.div>
-
-      {/* Collapsible Control Sections */}
-      <motion.div className="space-y-4">
-        <ControlSection title="Text Styling" defaultOpen={true}>
-          <FontControls />
-          <TextLimiter />
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-300">Mirror Text</label>
+          </div>
+          
+          <div className="flex items-end">
             <motion.button
-              onClick={() => setIsMirrored(!isMirrored)}
-              className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 text-green-400 glow"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+              onClick={handlePlayToggle}
+              className={`w-full py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-3 text-lg
+                ${isPlaying 
+                  ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white shadow-lg shadow-yellow-500/30' 
+                  : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg shadow-green-500/30'
+                }`}
+              whileHover={{ scale: 1.05, rotate: 1 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <FaSyncAlt size={16} />
+              {isPlaying ? (
+                <>
+                  <MdOutlinePauseCircleOutline size={24} /> PAUSE
+                </>
+              ) : (
+                <>
+                  <MdPlayArrow size={24} /> 
+                  {isMobile ? 'LANDSCAPE' : 'LAUNCH'}
+                </>
+              )}
             </motion.button>
           </div>
-        </ControlSection>
+        </motion.div>
 
-        <ControlSection title="Visual Effects">
-          <ColorControls />
-          <EffectControls />
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-300">Scroll Direction</label>
-            <select
-              value={scrollDirection}
-              onChange={(e) => setScrollDirection(e.target.value)}
-              className="bg-gray-700 text-white px-2 py-1 rounded-md border border-gray-600"
-            >
-              <option value="left">Left</option>
-              <option value="right">Right</option>
-              <option value="up">Up</option>
-              <option value="down">Down</option>
-            </select>
-          </div>
-        </ControlSection>
-
-        <ControlSection title="Animation & Speed">
-          <SpeedControl />
-        </ControlSection>
-
-        <ControlSection title="Environment">
-          <BackgroundSelector />
-          <FlickerControls />
-          <RgbBorderControls />
-        </ControlSection>
-
-        {background !== 'solid' && (
-          <ControlSection title="Audio Sync">
-            <AudioControls />
-          </ControlSection>
-        )}
-
-        <ControlSection title="Save & Load">
-          <ExportControls />
-          <div className="pt-4 flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <h3 className="text-md font-semibold text-gray-300">Presets</h3>
-              <div className="relative group">
-                <MdHelpOutline size={14} />
-                <div className="absolute z-10 hidden group-hover:block w-64 p-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg text-xs">
-                  Save your current settings as a preset for quick access later.
-                </div>
-              </div>
-            </div>
-            <div className="flex space-x-2">
-              <motion.button 
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-sm flex items-center gap-2 glow-pulse"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FaSave size={14} /> Save
-              </motion.button>
-              <motion.button 
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-sm flex items-center gap-2 glow-pulse"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FaUpload size={14} /> Load
-              </motion.button>
-            </div>
-          </div>
-        </ControlSection>
-        <ControlSection title="Presets" defaultOpen={true}>
-          <PresetManager />
-        </ControlSection>
-      </motion.div>
-
-      {/* Undo/Redo & Help */}
-      <motion.div 
-        className="flex justify-between gap-2 pt-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-      >
-        <motion.button
-          className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300 glow"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
+        {/* Live Hologram Preview */}
+        <motion.div 
+          className="p-4 rounded-2xl bg-black border-2 border-green-500/50 relative overflow-hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
         >
-          <FaUnderline size={16} />
-        </motion.button>
-        <motion.button
-          className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300 glow"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <MdHelpOutline size={16} />
-        </motion.button>
-      </motion.div>
-
-      {/* Landscape Modal for Mobile */}
-      <AnimatePresence>
-        {showModal && (
-          <motion.div
-            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-gray-900 p-6 rounded-xl border border-green-500 text-white text-center"
-              initial={{ scale: 0.7 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.7 }}
+          <div className="h-16 w-full relative overflow-hidden">
+            <motion.div 
+              className="absolute top-1/2 whitespace-nowrap text-2xl font-bold"
+              style={{
+                color: '#00ff41',
+                textShadow: '0 0 10px #00ff41, 0 0 20px #00ff41',
+                transform: 'translateY(-50%)'
+              }}
+              animate={{ 
+                x: [800, -800],
+              }}
+              transition={{ 
+                duration: 8,
+                repeat: Infinity,
+                ease: "linear"
+              }}
             >
-              <h3 className="text-xl font-bold mb-4 text-green-400">Landscape Mode Required</h3>
-              <p className="mb-4">Please rotate your device to landscape mode for the best LED screen experience.</p>
-              <div className="flex justify-center gap-4">
-                <motion.button
-                  onClick={confirmLandscape}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-md"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Confirm
-                </motion.button>
-                <motion.button
-                  onClick={cancelLandscape}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Cancel
-                </motion.button>
-              </div>
+              {text || "🌟 Your hologram preview... ✨"}
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+          </div>
+          
+          {/* Hologram scan lines */}
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(8)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-full h-0.5 bg-green-400/30"
+                style={{ top: `${(i + 1) * 12.5}%` }}
+                animate={{ opacity: [0.3, 0.8, 0.3] }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Infinity, 
+                  delay: i * 0.2 
+                }}
+              />
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Enhanced Control Sections */}
+        <motion.div className="space-y-4">
+          <ControlSection title="🎨 Visual Matrix" icon={FaPalette} color={themes[currentTheme].accent} defaultOpen={true}>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-white/80 mb-2">Font Style</label>
+                <select className="w-full bg-black/50 text-white rounded-lg p-2 border border-white/30">
+                  <option>Matrix</option>
+                  <option>Cyberpunk</option>
+                  <option>Retro</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-white/80 mb-2">Text Size</label>
+                <input type="range" className="w-full" min="10" max="100" defaultValue="50" />
+              </div>
+            </div>
+          </ControlSection>
+
+          <ControlSection title="⚡ Power Settings" icon={FaBolt} color={themes[currentTheme].accent}>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-white/80 mb-2">Speed Warp</label>
+                <input type="range" className="w-full" min="1" max="20" defaultValue={speed} />
+              </div>
+              <div>
+                <label className="block text-white/80 mb-2">Intensity</label>
+                <input type="range" className="w-full" min="1" max="10" defaultValue="5" />
+              </div>
+            </div>
+          </ControlSection>
+
+          <ControlSection title="🌈 Quantum Effects" icon={FaWandMagicSparkles} color={themes[currentTheme].accent}>
+            <div className="grid grid-cols-2 gap-2">
+              {['Neon Glow', 'Matrix Rain', 'Hologram', 'Cyber Pulse'].map((effect) => (
+                <motion.button
+                  key={effect}
+                  className="p-3 bg-white/10 rounded-lg text-white/80 hover:bg-white/20 transition-all border border-white/20"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {effect}
+                </motion.button>
+              ))}
+            </div>
+          </ControlSection>
+
+          <ControlSection title="🎵 Audio Sync" icon={FaGear} color={themes[currentTheme].accent}>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-white/80">Music Reactive</span>
+                <motion.button 
+                  className="w-12 h-6 bg-green-500 rounded-full relative"
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <motion.div 
+                    className="w-5 h-5 bg-white rounded-full absolute top-0.5"
+                    animate={{ x: [1, 23] }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </motion.button>
+              </div>
+              <div>
+                <label className="block text-white/80 mb-2">Beat Sensitivity</label>
+                <input type="range" className="w-full" min="1" max="10" defaultValue="5" />
+              </div>
+            </div>
+          </ControlSection>
+        </motion.div>
+
+        {/* Floating Action Buttons */}
+        <motion.div 
+          className="flex justify-center gap-4 pt-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+        >
+          <motion.button
+            className="p-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
+            whileHover={{ scale: 1.1, rotate: 180 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <FaSave size={20} />
+          </motion.button>
+          
+          <motion.button
+            className="p-4 rounded-full bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg"
+            whileHover={{ scale: 1.1, rotate: -180 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <FaUpload size={20} />
+          </motion.button>
+        </motion.div>
+      </motion.div>
+
+      {/* Landscape Modal */}
+      <LandscapeModal 
+        isOpen={showLandscapeModal}
+        onClose={() => setShowLandscapeModal(false)}
+        onConfirm={handleLandscapeConfirm}
+      />
+    </>
   );
 };
-
-// Add CSS-in-JS for custom styles
-const styles = `
-  .glass-effect {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.2));
-    backdrop-filter: blur(10px);
-  }
-  .glow {
-    box-shadow: 0 0 10px rgba(0, 255, 100, 0.3);
-    transition: box-shadow 0.3s;
-  }
-  .glow-pulse {
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0% { box-shadow: 0 0 5px rgba(0, 255, 100, 0.3); }
-    50% { box-shadow: 0 0 15px rgba(0, 255, 100, 0.6); }
-    100% { box-shadow: 0 0 5px rgba(0, 255, 100, 0.3); }
-  }
-  @keyframes scrollLeft {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
-  }
-`;
-
-// Apply styles (assuming a way to inject CSS, e.g., styled-components or a CSS file)
-const styleSheet = new CSSStyleSheet();
-styleSheet.replaceSync(styles);
-document.adoptedStyleSheets = [styleSheet];
 
 export default ControlPanel;
