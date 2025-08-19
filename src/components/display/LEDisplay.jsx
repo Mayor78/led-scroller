@@ -1,89 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Background from './Background';
+import ScrollingText from './ScrollingText';
+import LEDEffects from './LEDEffect';
 import { useScrollerStore } from '../../stores/useScrollerStore';
-
-// Background Component
-const Background = ({ type, color }) => {
-  if (type === 'gradient') {
-    return (
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-900 to-purple-900" />
-    );
-  } else if (type === 'solid') {
-    return (
-      <div 
-        className="absolute inset-0" 
-        style={{ backgroundColor: color }} 
-      />
-    );
-  }
-  return <div className="absolute inset-0 bg-black" />;
-};
-
-// ScrollingText Component with improved animation
-const ScrollingText = ({ text, color, speed, isPlaying }) => {
-  const textRef = useRef(null);
-  const [textWidth, setTextWidth] = useState(0);
-
-  useEffect(() => {
-    if (textRef.current) {
-      setTextWidth(textRef.current.scrollWidth);
-    }
-  }, [text]);
-
-  return (
-    <div className="absolute inset-0 flex items-center overflow-hidden">
-      <motion.div
-        ref={textRef}
-        className="whitespace-nowrap text-4xl font-mono font-bold px-4"
-        style={{ 
-          color: color || '#00ff41',
-          textShadow: `0 0 10px ${color || '#00ff41'}, 0 0 20px ${color || '#00ff41'}`,
-        }}
-        animate={isPlaying ? {
-          x: [window.innerWidth, -textWidth]
-        } : { x: 0 }}
-        transition={isPlaying ? {
-          duration: 30 - (speed * 3),
-          repeat: Infinity,
-          ease: "linear"
-        } : {}}
-      >
-        {text || "LED DISPLAY"}
-      </motion.div>
-    </div>
-  );
-};
-
-// LEDEffects Component
-const LEDEffects = ({ frameStyle, cornerLights }) => (
-  <div className="absolute inset-0 pointer-events-none">
-    {/* LED Grid Effect */}
-    <div className="absolute inset-0 opacity-20"
-         style={{
-           backgroundImage: `
-             linear-gradient(90deg, transparent 98%, #00ff41 100%),
-             linear-gradient(0deg, transparent 98%, #00ff41 100%)
-           `,
-           backgroundSize: '4px 4px'
-         }} />
-    
-    {/* Corner Lights */}
-    {cornerLights && (
-      <>
-        {['top-left', 'top-right', 'bottom-left', 'bottom-right'].map((corner) => (
-          <motion.div
-            key={corner}
-            className={`absolute w-4 h-4 rounded-full bg-red-500 ${
-              corner.includes('top') ? 'top-2' : 'bottom-2'
-            } ${corner.includes('left') ? 'left-2' : 'right-2'}`}
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 1, repeat: Infinity }}
-          />
-        ))}
-      </>
-    )}
-  </div>
-);
 
 // Mobile detection hook
 const useIsMobile = () => {
@@ -102,6 +22,71 @@ const useIsMobile = () => {
   return isMobile;
 };
 
+// Landscape Modal Component
+const LandscapeModal = ({ isOpen, onConfirm, onCancel }) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div 
+            className="bg-gray-800/95 backdrop-blur-lg border border-green-500/30 rounded-xl p-6 max-w-md w-full mx-4"
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          >
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" className="text-green-400">
+                  <path d="M19 12v-1c0-1.33-2.67-2-4-2-1.33 0-4 .67-4 2v1c0 1.33 2.67 2 4 2 1.33 0 4-.67 4-2zm-4-6c-1.11 0-2 .89-2 2v.5c0 .83.67 1.5 1.5 1.5h1c.83 0 1.5-.67 1.5-1.5V8c0-1.11-.89-2-2-2zm6-2h-4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 0H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-green-400 mb-2">Switch to Landscape Mode</h3>
+              <p className="text-gray-300 mb-4">
+                For the best experience, please rotate your device to landscape orientation.
+              </p>
+              <div className="flex justify-center items-center gap-3 text-green-400 text-2xl mb-4">
+                <span>📱</span>
+                <motion.span 
+                  animate={{ rotate: 90 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  ⟳
+                </motion.span>
+                <span>📱</span>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-3">
+              <motion.button
+                onClick={onConfirm}
+                className="py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                I've Rotated My Device
+              </motion.button>
+              <motion.button
+                onClick={onCancel}
+                className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Cancel
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 export default function LEDDisplay() {
   const { 
     background, 
@@ -118,8 +103,30 @@ export default function LEDDisplay() {
   const displayRef = useRef(null);
   const isMobile = useIsMobile();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showLandscapeModal, setShowLandscapeModal] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
-  const [showLandscapePrompt, setShowLandscapePrompt] = useState(false);
+
+  // Monitor orientation changes
+  useEffect(() => {
+    const checkOrientation = () => {
+      const isLandscapeMode = window.innerWidth > window.innerHeight;
+      setIsLandscape(isLandscapeMode);
+      
+      // If we're in landscape and the modal is showing, hide it
+      if (isLandscapeMode && showLandscapeModal) {
+        setShowLandscapeModal(false);
+      }
+    };
+
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, [showLandscapeModal]);
 
   // Monitor fullscreen changes
   useEffect(() => {
@@ -151,34 +158,10 @@ export default function LEDDisplay() {
     };
   }, [isPlaying, togglePlay]);
 
-  // Monitor orientation changes
-  useEffect(() => {
-    const handleOrientationChange = () => {
-      // Check if device is in landscape
-      const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
-      setIsLandscape(isCurrentlyLandscape);
-      
-      // Hide landscape prompt if device is now in landscape
-      if (isCurrentlyLandscape) {
-        setShowLandscapePrompt(false);
-      }
-    };
-
-    handleOrientationChange(); // Initial check
-    window.addEventListener('resize', handleOrientationChange);
-    window.addEventListener('orientationchange', handleOrientationChange);
-
-    return () => {
-      window.removeEventListener('resize', handleOrientationChange);
-      window.removeEventListener('orientationchange', handleOrientationChange);
-    };
-  }, []);
-
-  // Function to enter fullscreen landscape mode
-  const enterFullscreenLandscape = async () => {
+  // Function to enter fullscreen
+  const enterFullscreen = async () => {
     if (displayRef.current) {
       try {
-        // Request fullscreen
         if (displayRef.current.requestFullscreen) {
           await displayRef.current.requestFullscreen();
         } else if (displayRef.current.webkitRequestFullscreen) {
@@ -188,23 +171,40 @@ export default function LEDDisplay() {
         } else if (displayRef.current.msRequestFullscreen) {
           await displayRef.current.msRequestFullscreen();
         }
-
-        // On mobile, show landscape prompt if not in landscape
-        if (isMobile && !isLandscape) {
-          setShowLandscapePrompt(true);
-        }
       } catch (error) {
         console.error('Error entering fullscreen:', error);
       }
     }
   };
 
-  // Auto-enter fullscreen when playing starts on mobile
-  useEffect(() => {
-    if (isPlaying && isMobile) {
-      enterFullscreenLandscape();
+  // Function to handle play toggle
+  const handlePlayToggle = () => {
+    if (isMobile && !isPlaying) {
+      // Check if we're already in landscape
+      if (isLandscape) {
+        togglePlay();
+        enterFullscreen();
+      } else {
+        // Show landscape modal
+        setShowLandscapeModal(true);
+      }
+    } else {
+      togglePlay();
+      if (!isPlaying) {
+        enterFullscreen();
+      }
     }
-  }, [isPlaying, isMobile]);
+  };
+
+  const handleConfirmLandscape = () => {
+    setShowLandscapeModal(false);
+    togglePlay();
+    enterFullscreen();
+  };
+
+  const handleCancelLandscape = () => {
+    setShowLandscapeModal(false);
+  };
 
   // Exit fullscreen when not playing
   useEffect(() => {
@@ -221,11 +221,11 @@ export default function LEDDisplay() {
     }
   }, [isPlaying, isFullscreen]);
 
-  // Dynamic classes based on fullscreen and mobile state
+  // Dynamic classes based on fullscreen state
   const displayClasses = `
-    led-display relative overflow-hidden border-2 border-gray-700 bg-black
+    relative overflow-hidden border-2 border-gray-700 bg-black
     ${isFullscreen 
-      ? 'fixed inset-0 z-50 w-screen h-screen rounded-none border-none' 
+      ? 'fixed inset-0 z-40 w-screen h-screen rounded-none border-none' 
       : 'h-64 w-full rounded-xl'
     }
   `;
@@ -240,23 +240,7 @@ export default function LEDDisplay() {
         <Background type={background} color={bgColor} />
         
         {/* LED Screen Effect */}
-        <div className="absolute inset-0">
-          {/* Scanlines effect */}
-          <div className="absolute inset-0 opacity-20 pointer-events-none"
-               style={{
-                 backgroundImage: 'linear-gradient(transparent 50%, rgba(0, 255, 65, 0.1) 50%)',
-                 backgroundSize: '100% 4px'
-               }} />
-          
-          {/* CRT curve effect in fullscreen */}
-          {isFullscreen && (
-            <div className="absolute inset-0 bg-black opacity-20 pointer-events-none"
-                 style={{
-                   borderRadius: isFullscreen ? '0' : '12px',
-                   boxShadow: 'inset 0 0 50px rgba(0, 0, 0, 0.8)'
-                 }} />
-          )}
-        </div>
+        <div className="absolute inset-0 led-screen-effect"></div>
         
         {/* Scrolling Text */}
         <ScrollingText
@@ -266,6 +250,13 @@ export default function LEDDisplay() {
           isPlaying={isPlaying}
         />
         
+
+         {/* Landscape Modal for Mobile */}
+      <LandscapeModal 
+        isOpen={showLandscapeModal} 
+        onConfirm={handleConfirmLandscape}
+        onCancel={handleCancelLandscape}
+      />
         {/* Visual Effects */}
         <LEDEffects 
           frameStyle={frameStyle} 
@@ -301,73 +292,15 @@ export default function LEDDisplay() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Landscape Orientation Prompt (for mobile in fullscreen) */}
-        <AnimatePresence>
-          {isFullscreen && isMobile && showLandscapePrompt && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-20"
-              onClick={() => setShowLandscapePrompt(false)}
-            >
-              <div className="text-center text-white p-8 max-w-md">
-                <motion.div
-                  animate={{ rotate: [0, 90, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="mx-auto mb-6 w-20 h-20 border-4 border-green-400 rounded-lg flex items-center justify-center"
-                >
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" className="text-green-400">
-                    <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03L12 2.03c1.33.07 2.59.32 3.81.7L18 5.92l-1.41 1.41-.69-.69c-.9-.24-1.84-.4-2.81-.46V2.52h1.39zm-.7 3.61c.81.25 1.58.59 2.28 1.01l1.14-1.14c-.96-.65-2.02-1.15-3.17-1.46l-.25 1.59zM12 19.96c-3.87-.78-6.8-3.71-7.58-7.58L2.42 12c.88 4.84 4.94 8.64 9.58 9.56v-1.6zm-1.71-1.71c1.33.07 2.59.32 3.81.7l2.19-3.19-1.41-1.41-.69.69c-.9.24-1.84.4-2.81.46v3.75h-1.09zm7.58-7.58c-.78-3.87-3.71-6.8-7.58-7.58L12 1.04c4.84.88 8.64 4.94 9.56 9.58h-1.6zm-15.73 0c.78 3.87 3.71 6.8 7.58 7.58L12 22.96c-4.84-.88-8.64-4.94-9.56-9.58h1.6z"/>
-                  </svg>
-                </motion.div>
-                
-                <motion.h3 
-                  className="text-2xl font-bold mb-4"
-                  animate={{ opacity: [0.7, 1, 0.7] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  Please Rotate Your Device
-                </motion.h3>
-                
-                <p className="text-lg text-gray-300 mb-6">
-                  For the best LED display experience, please rotate your device to landscape orientation.
-                </p>
-                
-                <div className="flex items-center justify-center gap-2 text-green-400">
-                  <span className="text-3xl">📱</span>
-                  <motion.span 
-                    className="text-2xl"
-                    animate={{ rotate: [0, 90] }}
-                    transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
-                  >
-                    ↻
-                  </motion.span>
-                  <span className="text-3xl">📱</span>
-                </div>
-
-                <motion.button
-                  className="mt-6 px-6 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white font-medium"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowLandscapePrompt(false)}
-                >
-                  Continue Anyway
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* Add custom CSS for LED effects */}
       <style jsx>{`
-        .led-display {
+        .led-screen-effect {
           position: relative;
         }
         
-        .led-display::before {
+        .led-screen-effect::before {
           content: '';
           position: absolute;
           top: 0;
@@ -380,30 +313,48 @@ export default function LEDDisplay() {
           background-size: 4px 4px;
           pointer-events: none;
           opacity: 0.3;
+          z-index: 2;
         }
 
         /* Enhanced fullscreen styles */
-        .led-display:fullscreen,
-        .led-display:-webkit-full-screen,
-        .led-display:-moz-full-screen {
+        :fullscreen,
+        :-webkit-full-screen,
+        :-moz-full-screen {
           border-radius: 0 !important;
           border: none !important;
         }
 
+        /* Scanlines effect */
+        .led-screen-effect::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-image: linear-gradient(transparent 50%, rgba(0, 255, 65, 0.1) 50%);
+          background-size: 100% 4px;
+          pointer-events: none;
+          opacity: 0.2;
+          z-index: 3;
+        }
+
         /* Landscape orientation media query */
         @media screen and (orientation: landscape) and (max-height: 500px) {
-          .led-display:fullscreen .scrolling-text {
+          :fullscreen .scrolling-text {
             font-size: 4rem;
           }
         }
 
         /* Portrait orientation warning */
         @media screen and (orientation: portrait) and (max-width: 500px) {
-          .led-display:fullscreen {
+          :fullscreen {
             background: #000;
           }
         }
       `}</style>
+
+     
     </>
   );
 }
