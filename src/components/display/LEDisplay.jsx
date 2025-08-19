@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Swal from 'sweetalert2';
 import Background from './Background';
 import ScrollingText from './ScrollingText';
 import LEDEffects from './LEDEffect';
@@ -21,8 +22,6 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-
-
 export default function LEDDisplay() {
   const { 
     background, 
@@ -40,7 +39,6 @@ export default function LEDDisplay() {
   const isMobile = useIsMobile();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
-  const [showLandscapeModal, setShowLandscapeModal] = useState(false);
 
   // Monitor fullscreen changes
   useEffect(() => {
@@ -77,9 +75,6 @@ export default function LEDDisplay() {
     const handleOrientationChange = () => {
       const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
       setIsLandscape(isCurrentlyLandscape);
-      if (isCurrentlyLandscape && showLandscapeModal) {
-        setShowLandscapeModal(false);
-      }
     };
 
     handleOrientationChange();
@@ -90,7 +85,65 @@ export default function LEDDisplay() {
       window.removeEventListener('resize', handleOrientationChange);
       window.removeEventListener('orientationchange', handleOrientationChange);
     };
-  }, [showLandscapeModal]);
+  }, []);
+
+  // Show SweetAlert2 landscape modal
+  const showLandscapeAlert = () => {
+    Swal.fire({
+      title: 'Landscape Mode Required',
+      html: `
+        <div style="text-align: center;">
+          <div style="width: 80px; height: 80px; margin: 0 auto 20px; background: rgba(0, 255, 65, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="#00ff41">
+              <path d="M19 12v-1c0-1.33-2.67-2-4-2-1.33 0-4 .67-4 2v1c0 1.33 2.67 2 4 2 1.33 0 4-.67 4-2zm-4-6c-1.11 0-2 .89-2 2v.5c0 .83.67 1.5 1.5 1.5h1c.83 0 1.5-.67 1.5-1.5V8c0-1.11-.89-2-2-2zm6-2h-4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 0H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/>
+            </svg>
+          </div>
+          <p style="color: #d1d5db; margin-bottom: 20px;">For the best experience, please rotate your device to landscape orientation.</p>
+          <div style="display: flex; justify-content: center; gap: 10px; color: #00ff41; font-size: 24px;">
+            <span>📱</span>
+            <span style="display: inline-block; animation: rotate 2s infinite;">⟳</span>
+            <span>📱</span>
+          </div>
+        </div>
+      `,
+      background: '#1f2937',
+      color: 'white',
+      showCancelButton: true,
+      confirmButtonText: 'I\'ve Rotated My Device',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#16a34a',
+      cancelButtonColor: '#4b5563',
+      customClass: {
+        popup: 'landscape-swal-popup',
+        title: 'landscape-swal-title',
+        htmlContainer: 'landscape-swal-html',
+        confirmButton: 'landscape-swal-confirm',
+        cancelButton: 'landscape-swal-cancel'
+      },
+      didOpen: () => {
+        // Add CSS animation for the rotate icon
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(90deg); }
+          }
+        `;
+        document.head.appendChild(style);
+      },
+      willClose: () => {
+        // Clean up the style element
+        const style = document.querySelector('style[data-swal="rotate"]');
+        if (style) style.remove();
+      }
+    }).then((result) => {
+      if (result.isDismissed) {
+        // User clicked cancel, pause playback
+        togglePlay();
+      }
+      // If user confirms, just continue (modal will close)
+    });
+  };
 
   // Enter fullscreen landscape mode
   const enterFullscreenLandscape = async () => {
@@ -105,8 +158,13 @@ export default function LEDDisplay() {
         } else if (displayRef.current.msRequestFullscreen) {
           await displayRef.current.msRequestFullscreen();
         }
+        
+        // Show SweetAlert if not in landscape
         if (isMobile && !isLandscape) {
-          setShowLandscapeModal(true);
+          // Small delay to ensure fullscreen transition completes
+          setTimeout(() => {
+            showLandscapeAlert();
+          }, 300);
         }
       } catch (error) {
         console.error('Error entering fullscreen:', error);
@@ -135,15 +193,6 @@ export default function LEDDisplay() {
       }
     }
   }, [isPlaying, isFullscreen]);
-
-  const handleConfirmLandscape = () => {
-    setShowLandscapeModal(false);
-  };
-
-  const handleCancelLandscape = () => {
-    setShowLandscapeModal(false);
-    togglePlay(); // Pause playback if user cancels
-  };
 
   const displayClasses = `
     led-display relative overflow-hidden border-2 border-gray-700 bg-black
@@ -213,57 +262,6 @@ export default function LEDDisplay() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Landscape Modal - Positioned relative to the LED display */}
-        <AnimatePresence>
-          {showLandscapeModal && (
-            <motion.div 
-              className="absolut inset-0 b-black/80 backdrop-blur-md z-50 flex items-cente justify-cente p-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <motion.div 
-                className="bg-gray-800/90 backdrop-blur-lg border border-green-500/30 rounded-xl p-6 max-w-md w-full mx-4"
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              >
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" className="text-green-400">
-                      <path d="M19 12v-1c0-1.33-2.67-2-4-2-1.33 0-4 .67-4 2v1c0 1.33 2.67 2 4 2 1.33 0 4-.67 4-2zm-4-6c-1.11 0-2 .89-2 2v.5c0 .83.67 1.5 1.5 1.5h1c.83 0 1.5-.67 1.5-1.5V8c0-1.11-.89-2-2-2zm6-2h-4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 0H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/>
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold text-green-400 mb-2">Landscape Mode Required</h3>
-                  <p className="text-gray-300">
-                    For the best experience, please rotate your device to landscape orientation.
-                  </p>
-                </div>
-                
-                <div className="flex flex-col gap-3">
-                  <motion.button
-                    onClick={handleConfirmLandscape}
-                    className="py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    I've Rotated My Device
-                  </motion.button>
-                  <motion.button
-                    onClick={handleCancelLandscape}
-                    className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    Cancel
-                  </motion.button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       <style jsx>{`
@@ -308,6 +306,53 @@ export default function LEDDisplay() {
           .led-display:fullscreen {
             background: #000;
           }
+        }
+      `}</style>
+
+      {/* Add SweetAlert2 styles */}
+      <style jsx global>{`
+        .landscape-swal-popup {
+          background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
+          border: 1px solid rgba(0, 255, 65, 0.3) !important;
+          border-radius: 16px !important;
+          box-shadow: 0 0 30px rgba(0, 255, 65, 0.2) !important;
+        }
+        
+        .landscape-swal-title {
+          color: #00ff41 !important;
+          font-weight: bold !important;
+          font-size: 1.5rem !important;
+        }
+        
+        .landscape-swal-html {
+          color: #d1d5db !important;
+          line-height: 1.6 !important;
+        }
+        
+        .landscape-swal-confirm {
+          background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+          border: none !important;
+          border-radius: 8px !important;
+          font-weight: bold !important;
+          padding: 10px 24px !important;
+        }
+        
+        .landscape-swal-cancel {
+          background: #4b5563 !important;
+          border: none !important;
+          border-radius: 8px !important;
+          color: white !important;
+          padding: 10px 24px !important;
+        }
+        
+        .landscape-swal-confirm:hover {
+          background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
+          transform: translateY(-1px);
+        }
+        
+        .landscape-swal-cancel:hover {
+          background: #374151 !important;
+          transform: translateY(-1px);
         }
       `}</style>
     </>
