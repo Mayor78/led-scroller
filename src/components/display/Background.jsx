@@ -8,9 +8,8 @@ const MatrixRain = () => {
   const meshRef = useRef();
   const { bgColor } = useScrollerStore();
   const characters = useRef([]);
-  
+
   useEffect(() => {
-    // Initialize matrix characters
     characters.current = Array.from({ length: 200 }, () => ({
       x: Math.random() * 8 - 4,
       y: Math.random() * 10 - 5,
@@ -29,21 +28,22 @@ const MatrixRain = () => {
           char.x = Math.random() * 8 - 4;
         }
       });
+      meshRef.current.position.y = 0; // Ensure mesh stays in view
     }
   });
 
   return (
-    <group>
+    <group ref={meshRef}>
       {/* Background plane */}
       <mesh position={[0, 0, -5]}>
         <planeGeometry args={[8, 10]} />
         <meshBasicMaterial color={bgColor} transparent opacity={0.1} />
       </mesh>
       
-      {/* Matrix characters */}
+      {/* Matrix characters as text (simplified) */}
       {characters.current.map((char, index) => (
         <mesh key={index} position={[char.x, char.y, char.z]}>
-          <boxGeometry args={[0.1, 0.3, 0.1]} />
+          <textGeometry args={[char.char, { size: 0.3, height: 0.1 }]} />
           <meshBasicMaterial color="#00ff00" />
         </mesh>
       ))}
@@ -55,20 +55,21 @@ const MatrixRain = () => {
 const Stars = () => {
   const pointsRef = useRef();
   const { bgColor } = useScrollerStore();
-  
+
   useFrame((state) => {
     if (pointsRef.current) {
       pointsRef.current.rotation.y += 0.0005;
     }
   });
 
+  const positions = new Float32Array(Array.from({ length: 3000 }, () => (Math.random() - 0.5) * 10));
   return (
     <points ref={pointsRef}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
           count={1000}
-          array={new Float32Array(Array.from({ length: 3000 }, () => (Math.random() - 0.5) * 10))}
+          array={positions}
           itemSize={3}
         />
       </bufferGeometry>
@@ -81,7 +82,7 @@ const Stars = () => {
 const CircuitBoard = () => {
   const groupRef = useRef();
   const linesRef = useRef([]);
-  
+
   useFrame((state) => {
     if (groupRef.current) {
       groupRef.current.rotation.y += 0.001;
@@ -90,10 +91,7 @@ const CircuitBoard = () => {
 
   return (
     <group ref={groupRef}>
-      {/* Grid base */}
       <gridHelper args={[8, 20, '#00ff00', '#003300']} />
-      
-      {/* Circuit lines */}
       {Array.from({ length: 50 }, (_, i) => (
         <line key={i}>
           <bufferGeometry>
@@ -117,7 +115,7 @@ const CircuitBoard = () => {
 // Cyber Grid Effect
 const CyberGrid = () => {
   const gridRef = useRef();
-  
+
   useFrame((state) => {
     if (gridRef.current) {
       gridRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.3) * 0.05;
@@ -190,7 +188,7 @@ const Background = () => {
     return (
       <div 
         className="absolute inset-0 z-0 transition-colors duration-300"
-        style={{ backgroundColor: currentColor }}
+        style={{ backgroundColor: bgColor }}
       />
     );
   }
@@ -198,24 +196,27 @@ const Background = () => {
   // 3D Backgrounds
   return (
     <div className="absolute inset-0 z-0 overflow-hidden">
-      <div 
-        className="absolute inset-0 transition-colors duration-300"
-        style={{ 
-          backgroundColor: currentColor,
-          border: rgbBorderEnabled ? `4px solid ${currentColor}` : 'none',
-          boxShadow: rgbBorderEnabled ? `0 0 20px ${currentColor}` : 'none'
-        }}
-      />
-      
-      <Canvas className="absolute inset-0" camera={{ position: [0, 0, 5], fov: 75 }}>
-        <color attach="background" args={['transparent']} />
-        <ambientLight intensity={0.3} />
-        
+      <Canvas 
+        className="w-full h-full"
+        camera={{ position: [0, 0, 5], fov: 75 }}
+        gl={{ alpha: true }} // Allow transparency
+      >
+        <ambientLight intensity={0.5} />
+        <pointLight position={[0, 0, 5]} intensity={0.8} />
         {background === 'matrix' && <MatrixRain />}
         {background === 'stars' && <Stars />}
         {background === 'circuit' && <CircuitBoard />}
         {background === 'cyber' && <CyberGrid />}
       </Canvas>
+      <div 
+        className="absolute inset-0"
+        style={{ 
+          backgroundColor: currentColor,
+          opacity: 0.1, // Slight overlay for depth
+          border: rgbBorderEnabled ? `4px solid ${currentColor}` : 'none',
+          boxShadow: rgbBorderEnabled ? `0 0 20px ${currentColor}` : 'none'
+        }}
+      />
     </div>
   );
 };
