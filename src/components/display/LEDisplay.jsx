@@ -87,17 +87,55 @@ export default function LEDDisplay() {
     };
   }, []);
 
-  // Show SweetAlert2 landscape modal - COMPLETELY CLEAN
+  // Show SweetAlert2 landscape modal
   const showLandscapeAlert = () => {
     Swal.fire({
       title: 'Landscape Mode Required',
-      text: 'For the best experience, please rotate your device to landscape orientation.',
-      icon: 'info',
+      html: `
+        <div style="text-align: center;">
+          <div style="width: 80px; height: 80px; margin: 0 auto 20px; background: rgba(0, 255, 65, 0.1); border-radius: 20%; display: flex; align-items: center; justify-content: center;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="#00ff41">
+              <path d="M19 12v-1c0-1.33-2.67-2-4-2-1.33 0-4 .67-4 2v1c0 1.33 2.67 2 4 2 1.33 0 4-.67 4-2zm-4-6c-1.11 0-2 .89-2 2v.5c0 .83.67 1.5 1.5 1.5h1c.83 0 1.5-.67 1.5-1.5V8c0-1.11-.89-2-2-2zm6-2h-4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 0H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/>
+            </svg>
+          </div>
+          <p style="color: #d1d5db; margin-bottom: 20px;">For the best experience, please rotate your device to landscape orientation.</p>
+          <div style="display: flex; justify-content: center; gap: 10px; color: #00ff41; font-size: 24px;">
+            <span>📱</span>
+            <span style="display: inline-block; animation: rotate 2s infinite;">⟳</span>
+            <span>📱</span>
+          </div>
+        </div>
+      `,
+      background: '#1f2937',
+      color: 'white',
       showCancelButton: true,
-      confirmButtonText: "I've Rotated My Device",
+      confirmButtonText: 'I\'ve Rotated My Device',
       cancelButtonText: 'Cancel',
-      allowEscapeKey: false,
-      allowOutsideClick: false
+      confirmButtonColor: '#16a34a',
+      cancelButtonColor: '#4b5563',
+      customClass: {
+        popup: 'landscape-swal-popup',
+        title: 'landscape-swal-title',
+        htmlContainer: 'landscape-swal-html',
+        confirmButton: 'landscape-swal-confirm',
+        cancelButton: 'landscape-swal-cancel'
+      },
+      didOpen: () => {
+        // Add CSS animation for the rotate icon
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(90deg); }
+          }
+        `;
+        document.head.appendChild(style);
+      },
+      willClose: () => {
+        // Clean up the style element
+        const style = document.querySelector('style[data-swal="rotate"]');
+        if (style) style.remove();
+      }
     }).then((result) => {
       if (result.isDismissed) {
         // User clicked cancel, pause playback
@@ -239,9 +277,9 @@ export default function LEDDisplay() {
           right: 0;
           bottom: 0;
           background: 
-            linear-gradient(极细 90deg, transparent 98%, rgba(0, 255, 65, 0.1) 100%),
+            linear-gradient(90deg, transparent 98%, rgba(0, 255, 65, 0.1) 100%),
             linear-gradient(0deg, transparent 98%, rgba(0, 255, 65, 0.1) 100%);
-          background极细-size: 4px 4px;
+          background-size: 4px 4px;
           pointer-events: none;
           opacity: 0.3;
         }
@@ -264,12 +302,59 @@ export default function LEDDisplay() {
           }
         }
 
-        @media screen and (orientation: portrait) and (max-width: 500极细px) {
+        @media screen and (orientation: portrait) and (max-width: 500px) {
           .led-display:fullscreen {
             background: #000;
           }
         }
       `}</style>
+
+      {/* Add SweetAlert2 styles */}
+      {/* <style jsx global>{`
+        .landscape-swal-popup {
+          background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
+          border: 1px solid rgba(0, 255, 65, 0.3) !important;
+          border-radius: 16px !important;
+          box-shadow: 0 0 30px rgba(0, 255, 65, 0.2) !important;
+        }
+        
+        .landscape-swal-title {
+          color: #00ff41 !important;
+          font-weight: bold !important;
+          font-size: 1.5rem !important;
+        }
+        
+        .landscape-swal-html {
+          color: #d1d5db !important;
+          line-height: 1.6 !important;
+        }
+        
+        .landscape-swal-confirm {
+          background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+          border: none !important;
+          border-radius: 8px !important;
+          font-weight: bold !important;
+          padding: 10px 24px !important;
+        }
+        
+        .landscape-swal-cancel {
+          background: #4b5563 !important;
+          border: none !important;
+          border-radius: 8px !important;
+          color: white !important;
+          padding: 10px 24px !important;
+        }
+        
+        .landscape-swal-confirm:hover {
+          background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
+          transform: translateY(-1px);
+        }
+        
+        .landscape-swal-cancel:hover {
+          background: #374151 !important;
+          transform: translateY(-1px);
+        }
+      `}</style> */}
     </>
   );
 }
