@@ -1,55 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useScrollerStore } from '../../stores/useScrollerStore';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, extend, useFrame } from '@react-three/fiber';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 import * as THREE from 'three';
 
-// Matrix Rain Effect
-const MatrixRain = () => {
-  const meshRef = useRef();
-  const { bgColor } = useScrollerStore();
-  const characters = useRef([]);
+// Extend R3F namespace
+extend({ TextGeometry });
 
-  useEffect(() => {
-    characters.current = Array.from({ length: 200 }, () => ({
-      x: Math.random() * 8 - 4,
-      y: Math.random() * 10 - 5,
-      z: -4.9,
-      speed: 0.02 + Math.random() * 0.03,
-      char: Math.random() > 0.5 ? '0' : '1'
-    }));
-  }, []);
-
-  useFrame(() => {
-    if (meshRef.current) {
-      characters.current.forEach((char) => {
-        char.y -= char.speed;
-        if (char.y < -5) {
-          char.y = 5;
-          char.x = Math.random() * 8 - 4;
-        }
-      });
-      meshRef.current.position.y = 0; // Ensure mesh stays in view
-    }
-  });
-
-  return (
-    <group ref={meshRef}>
-      {/* Background plane */}
-      <mesh position={[0, 0, -5]}>
-        <planeGeometry args={[8, 10]} />
-        <meshBasicMaterial color={bgColor} transparent opacity={0.1} />
-      </mesh>
-      
-      {/* Matrix characters as text (simplified) */}
-      {characters.current.map((char, index) => (
-        <mesh key={index} position={[char.x, char.y, char.z]}>
-          <textGeometry args={[char.char, { size: 0.3, height: 0.1 }]} />
-          <meshBasicMaterial color="#00ff00" />
-        </mesh>
-      ))}
-    </group>
-  );
-};
+// Matrix Rain Effect (Imported)
+import MatrixRain from './MatrixRain'; // Adjust path as needed
+// Stars, CircuitBoard, and CyberGrid remain unchanged, imported similarly
 
 // Stars Effect
 const Stars = () => {
@@ -195,7 +155,7 @@ const Background = () => {
 
   // 3D Backgrounds
   return (
-    <div className="absolute inset-0 z-0 overflow-hidden">
+    <div className="absolute inset-0 z-0 overflow-hidden" style={{ height: '100vh', width: '100vw' }}>
       <Canvas 
         className="w-full h-full"
         camera={{ position: [0, 0, 5], fov: 75 }}
