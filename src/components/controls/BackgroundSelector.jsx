@@ -6,10 +6,11 @@ const BackgroundSelector = () => {
   const { background, bgColor, setBackground, setBgColor } = useScrollerStore();
 
   const backgroundOptions = [
-    { value: 'solid', label: 'Solid Color' },
-    { value: 'matrix', label: 'Matrix' },
-    { value: 'stars', label: 'Stars' },
-    { value: 'circuit', label: 'Circuit' }
+    { value: 'solid', label: 'Solid Color', icon: '🎨' },
+    { value: 'matrix', label: 'Matrix Rain', icon: '💻' },
+    { value: 'stars', label: 'Cosmic Stars', icon: '✨' },
+    { value: 'circuit', label: 'Neural Network', icon: '🧠' },
+    { value: 'cyber', label: 'Cyber Grid', icon: '🔷' }
   ];
 
   const handlePreset = (type, color) => {
@@ -17,11 +18,19 @@ const BackgroundSelector = () => {
     setBgColor(color);
   };
 
+  const presetColors = [
+    { name: 'Matrix Green', color: '#001a00' },
+    { name: 'Cyber Blue', color: '#000033' },
+    { name: 'Neon Purple', color: '#330033' },
+    { name: 'Deep Space', color: '#000011' }
+  ];
+
   return (
-    <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-      <h3 className="text-lg font-bold text-green-400 mb-3">Background</h3>
+    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/30">
+      <h3 className="text-lg font-semibold text-green-400 mb-4">Background Settings</h3>
       
       <div className="space-y-4">
+        {/* Background Type */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Background Type
@@ -29,16 +38,17 @@ const BackgroundSelector = () => {
           <select
             value={background}
             onChange={(e) => setBackground(e.target.value)}
-            className="w-full bg-gray-700 text-white p-2 rounded border border-gray-600 focus:border-green-500 focus:ring-1 focus:ring-green-500"
+            className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 transition-all"
           >
             {backgroundOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {option.icon} {option.label}
               </option>
             ))}
           </select>
         </div>
 
+        {/* Background Color */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Background Color
@@ -48,46 +58,38 @@ const BackgroundSelector = () => {
               type="color"
               value={bgColor}
               onChange={(e) => setBgColor(e.target.value)}
-              className="w-10 h-10 rounded cursor-pointer"
+              className="w-12 h-12 rounded-lg cursor-pointer border border-gray-600"
             />
             <input
               type="text"
               value={bgColor}
               onChange={(e) => setBgColor(e.target.value)}
-              className="flex-1 bg-gray-700 text-white px-3 py-2 rounded border border-gray-600"
+              className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/30"
+              placeholder="#000000"
             />
           </div>
         </div>
 
+        {/* Quick Presets */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Quick Presets
           </label>
-          <div className="grid grid-cols-4 gap-2">
-            <button
-              onClick={() => handlePreset('solid', '#000000')}
-              className="p-2 bg-gray-700 hover:bg-gray-600 rounded text-xs"
-            >
-              Black
-            </button>
-            <button
-              onClick={() => handlePreset('matrix', '#001a00')}
-              className="p-2 bg-gray-700 hover:bg-gray-600 rounded text-xs"
-            >
-              Matrix
-            </button>
-            <button
-              onClick={() => handlePreset('stars', '#000033')}
-              className="p-2 bg-gray-700 hover:bg-gray-600 rounded text-xs"
-            >
-              Space
-            </button>
-            <button
-              onClick={() => handlePreset('circuit', '#001100')}
-              className="p-2 bg-gray-700 hover:bg-gray-600 rounded text-xs"
-            >
-              Circuit
-            </button>
+          <div className="grid grid-cols-2 gap-2">
+            {presetColors.map((preset, index) => (
+              <button
+                key={index}
+                onClick={() => handlePreset(backgroundOptions[index + 1].value, preset.color)}
+                className="p-3 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
+                style={{ 
+                  background: `linear-gradient(45deg, ${preset.color}20, ${preset.color}40)`,
+                  border: `1px solid ${preset.color}60`
+                }}
+              >
+                <span style={{ color: preset.color }}>●</span>
+                <span className="text-gray-300">{preset.name}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
