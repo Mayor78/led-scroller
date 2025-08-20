@@ -5,6 +5,7 @@ import Background from './Background';
 import ScrollingText from './ScrollingText';
 import LEDEffects from './LEDEffect';
 import { useScrollerStore } from '../../stores/useScrollerStore';
+import ControlPanel from '../controls/ControlPannel';
 
 // Mobile detection hook
 const useIsMobile = () => {
@@ -261,7 +262,10 @@ export default function LEDDisplay() {
               </motion.button>
             </motion.div>
           )}
+
+         
         </AnimatePresence>
+         {/* <ControlPanel/> */}
       </div>
 
       <style jsx>{`

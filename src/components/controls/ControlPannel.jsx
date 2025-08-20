@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useScrollerStore } from '../../stores/useScrollerStore';
-import { FaChevronRight, FaChevronDown, FaPalette,FaAmazonPay, FaSave, FaUpload, FaUndo, FaRedo, FaCamera, FaExpand, FaTypo3,  } from "react-icons/fa";
-import { FaInfo, FaSlideshare,  } from "react-icons/fa6";
+import { FaChevronRight, FaChevronDown, FaPalette, FaAmazonPay, FaSave, FaUpload, FaUndo, FaRedo, FaCamera, FaTypo3 } from "react-icons/fa";
+import { FaInfo, FaSlideshare } from "react-icons/fa6";
 import { MdOutlinePauseCircleOutline, MdPlayArrow, MdHelpOutline, MdOutlineScreenshot } from "react-icons/md";
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -21,61 +21,6 @@ import PresetManager from '../../contexts/PresetManager';
 const sectionAnimations = {
   open: { opacity: 1, height: "auto" },
   collapsed: { opacity: 0, height: 0 }
-};
-
-// Modal for mobile landscape confirmation
-const LandscapeModal = ({ isOpen, onConfirm, onCancel }) => {
-  return (
-    <AnimatePresence>
-        
-      {isOpen && (
-        <motion.div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <motion.div 
-            className="bg-gray-800/90 backdrop-blur-lg border border-green-500/30 rounded-xl p-6 max-w-md w-full"
-            initial={{ scale: 0.9, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          >
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
-                <FaExpand className="text-green-400 text-2xl" />
-              </div>
-              <h3 className="text-xl font-bold text-green-400 mb-2">Landscape Mode Required</h3>
-              <p className="text-gray-300">
-                For the best experience, the LED display will open in fullscreen landscape mode.
-                Please rotate your device if it doesn't happen automatically.
-              </p>
-            </div>
-            
-            <div className="flex flex-col gap-3">
-              <motion.button
-                onClick={onConfirm}
-                className="py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Continue to Fullscreen
-              </motion.button>
-              <motion.button
-                onClick={onCancel}
-                className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Cancel
-              </motion.button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
 };
 
 // Dropdown Section Component
@@ -138,7 +83,6 @@ const ControlPanel = () => {
   const { text, setText, isPlaying, togglePlay, background, speed } = useScrollerStore();
   const [activeHelp, setActiveHelp] = useState(null);
   const [currentTheme, setCurrentTheme] = useState('matrix');
-  const [showLandscapeModal, setShowLandscapeModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   // Check if device is mobile
@@ -170,8 +114,11 @@ const ControlPanel = () => {
 
   const handlePlayToggle = () => {
     if (isMobile && !isPlaying) {
-      // Show landscape modal on mobile before playing
-      setShowLandscapeModal(true);
+      // Use native alert instead of modal
+      if (window.confirm("For the best experience, the LED display will open in fullscreen landscape mode. Please rotate your device if it doesn't happen automatically. Continue?")) {
+        togglePlay();
+        enterFullscreen();
+      }
     } else {
       togglePlay();
       if (!isPlaying) {
@@ -190,16 +137,6 @@ const ControlPanel = () => {
     if (screen.orientation && screen.orientation.lock) {
       screen.orientation.lock('landscape').catch(e => console.log("Orientation lock error:", e));
     }
-  };
-
-  const handleConfirmLandscape = () => {
-    setShowLandscapeModal(false);
-    togglePlay();
-    enterFullscreen();
-  };
-
-  const handleCancelLandscape = () => {
-    setShowLandscapeModal(false);
   };
 
   // Toolbar icons with improved styling
@@ -397,49 +334,10 @@ const ControlPanel = () => {
           </ControlSection>
         )}
 
-        {/* <ControlSection title="Export & Save" icon={FaSave}>
-          <ExportControls />
-          <div className="pt-4 flex justify-between items-center border-t border-gray-700/30">
-            <div className="flex items-center gap-2">
-              <h3 className="text-md font-semibold text-gray-300">Preset Manager</h3>
-              <div className="relative group">
-                <MdHelpOutline size={16} />
-                <div className="absolute z-10 hidden group-hover:block w-64 p-3 bg-gray-800 
-                                border border-gray-600 rounded-lg shadow-lg text-xs bottom-full mb-2">
-                  Save your current settings as a preset for quick access later
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <motion.button 
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-all flex items-center gap-2"
-                whileHover={{ scale: 1.05, y: -1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FaSave size={14} /> Save
-              </motion.button>
-              <motion.button 
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-all flex items-center gap-2"
-                whileHover={{ scale: 1.05, y: -1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FaUpload size={14} /> Load
-              </motion.button>
-            </div>
-          </div>
-        </ControlSection>
-         */}
         <ControlSection title="Presets" defaultOpen={true}>
           <PresetManager />
         </ControlSection>
       </motion.div>
-
-      {/* Landscape Modal for Mobile */}
-      <LandscapeModal 
-        isOpen={showLandscapeModal} 
-        onConfirm={handleConfirmLandscape}
-        onCancel={handleCancelLandscape}
-      />
     </motion.div>
   );
 };
