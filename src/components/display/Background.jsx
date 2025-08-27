@@ -1,97 +1,141 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useScrollerStore } from '../../stores/useScrollerStore';
-import { Canvas, extend, useFrame } from '@react-three/fiber';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
-import * as THREE from 'three';
 
-// Extend R3F namespace
-extend({ TextGeometry });
+const MatrixRain = ({ canvasRef, ctx, bgColor }) => {
+  const characters = useRef([]);
 
-// Matrix Rain Effect (Imported)
-import MatrixRain from './MatrixRain'; // Adjust path as needed
-// Stars, CircuitBoard, and CyberGrid remain unchanged, imported similarly
-
-// Stars Effect
-const Stars = () => {
-  const pointsRef = useRef();
-  const { bgColor } = useScrollerStore();
-
-  useFrame((state) => {
-    if (pointsRef.current) {
-      pointsRef.current.rotation.y += 0.0005;
+  useEffect(() => {
+    if (!canvasRef.current || !ctx.current) return;
+    for (let i = 0; i < 50; i++) {
+      characters.current.push({
+        x: Math.random() * canvasRef.current.width,
+        y: Math.random() * canvasRef.current.height,
+        speed: Math.random() * 2 + 1,
+      });
     }
-  });
 
-  const positions = new Float32Array(Array.from({ length: 3000 }, () => (Math.random() - 0.5) * 10));
-  return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={1000}
-          array={positions}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial color="#ffffff" size={0.05} sizeAttenuation />
-    </points>
-  );
+    const animate = () => {
+      if (!ctx.current) return;
+      ctx.current.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.current.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      ctx.current.fillStyle = '#00ff00';
+      ctx.current.font = '16px monospace';
+
+      characters.current.forEach((char) => {
+        ctx.current.fillText('0', char.x, char.y);
+        char.y += char.speed;
+        if (char.y > canvasRef.current.height) {
+          char.y = 0;
+          char.x = Math.random() * canvasRef.current.width;
+        }
+      });
+      requestAnimationFrame(animate);
+    };
+    animate();
+  }, [canvasRef, ctx]);
+
+  return null; // No direct rendering, handled by canvas
 };
 
-// Circuit Board Effect
-const CircuitBoard = () => {
-  const groupRef = useRef();
-  const linesRef = useRef([]);
+const Stars = ({ canvasRef, ctx, bgColor }) => {
+  const stars = useRef([]);
 
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += 0.001;
+  useEffect(() => {
+    if (!canvasRef.current || !ctx.current) return;
+    for (let i = 0; i < 100; i++) {
+      stars.current.push({
+        x: Math.random() * canvasRef.current.width,
+        y: Math.random() * canvasRef.current.height,
+        size: Math.random() * 2 + 1,
+      });
     }
-  });
 
-  return (
-    <group ref={groupRef}>
-      <gridHelper args={[8, 20, '#00ff00', '#003300']} />
-      {Array.from({ length: 50 }, (_, i) => (
-        <line key={i}>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={2}
-              array={new Float32Array([
-                Math.random() * 8 - 4, Math.random() * 8 - 4, -5,
-                Math.random() * 8 - 4, Math.random() * 8 - 4, -5
-              ])}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial color="#00ff00" />
-        </line>
-      ))}
-    </group>
-  );
+    const animate = () => {
+      if (!ctx.current) return;
+      ctx.current.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.current.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      ctx.current.fillStyle = '#ffffff';
+
+      stars.current.forEach((star) => {
+        ctx.current.beginPath();
+        ctx.current.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.current.fill();
+      });
+      requestAnimationFrame(animate);
+    };
+    animate();
+  }, [canvasRef, ctx]);
+
+  return null;
 };
 
-// Cyber Grid Effect
-const CyberGrid = () => {
-  const gridRef = useRef();
+const CircuitBoard = ({ canvasRef, ctx, bgColor }) => {
+  const lines = useRef([]);
 
-  useFrame((state) => {
-    if (gridRef.current) {
-      gridRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.3) * 0.05;
-      gridRef.current.rotation.z += 0.0005;
+  useEffect(() => {
+    if (!canvasRef.current || !ctx.current) return;
+    for (let i = 0; i < 20; i++) {
+      lines.current.push({
+        x1: Math.random() * canvasRef.current.width,
+        y1: Math.random() * canvasRef.current.height,
+        x2: Math.random() * canvasRef.current.width,
+        y2: Math.random() * canvasRef.current.height,
+      });
     }
-  });
 
-  return (
-    <group>
-      <gridHelper ref={gridRef} args={[10, 20, '#00ff00', '#004400']} />
-      <gridHelper args={[10, 20, '#00ff00', '#004400']} rotation={[Math.PI / 2, 0, 0]} />
-    </group>
-  );
+    const animate = () => {
+      if (!ctx.current) return;
+      ctx.current.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.current.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      ctx.current.strokeStyle = '#00ff00';
+      ctx.current.lineWidth = 1;
+
+      lines.current.forEach((line) => {
+        ctx.current.beginPath();
+        ctx.current.moveTo(line.x1, line.y1);
+        ctx.current.lineTo(line.x2, line.y2);
+        ctx.current.stroke();
+      });
+      requestAnimationFrame(animate);
+    };
+    animate();
+  }, [canvasRef, ctx]);
+
+  return null;
 };
 
-// Main Background Component
+const CyberGrid = ({ canvasRef, ctx, bgColor }) => {
+  useEffect(() => {
+    if (!canvasRef.current || !ctx.current) return;
+
+    const animate = () => {
+      if (!ctx.current) return;
+      ctx.current.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.current.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      ctx.current.strokeStyle = '#00ff00';
+      ctx.current.lineWidth = 0.5;
+
+      const gridSize = 50;
+      for (let x = 0; x < canvasRef.current.width; x += gridSize) {
+        ctx.current.beginPath();
+        ctx.current.moveTo(x, 0);
+        ctx.current.lineTo(x, canvasRef.current.height);
+        ctx.current.stroke();
+      }
+      for (let y = 0; y < canvasRef.current.height; y += gridSize) {
+        ctx.current.beginPath();
+        ctx.current.moveTo(0, y);
+        ctx.current.lineTo(canvasRef.current.width, y);
+        ctx.current.stroke();
+      }
+      requestAnimationFrame(animate);
+    };
+    animate();
+  }, [canvasRef, ctx]);
+
+  return null;
+};
+
 const Background = () => {
   const { 
     background, 
@@ -104,13 +148,20 @@ const Background = () => {
   
   const [currentColor, setCurrentColor] = useState(bgColor);
   const [isClient, setIsClient] = useState(false);
+  const canvasRef = useRef(null);
+  const ctx = useRef(null);
 
-  // Handle client-side only rendering
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Handle flickering effect
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    ctx.current = canvasRef.current.getContext('2d');
+    canvasRef.current.width = window.innerWidth;
+    canvasRef.current.height = window.innerHeight;
+  }, []);
+
   useEffect(() => {
     if (!flickerEnabled && !rgbBorderEnabled) {
       setCurrentColor(bgColor);
@@ -129,7 +180,6 @@ const Background = () => {
     return () => clearInterval(interval);
   }, [flickerEnabled, bgColor, rgbBorderEnabled, rgbBorderColors, rgbBorderSpeed]);
 
-  // Solid color background
   if (background === 'solid') {
     return (
       <div 
@@ -143,7 +193,6 @@ const Background = () => {
     );
   }
 
-  // Return simple div if not on client side
   if (!isClient) {
     return (
       <div 
@@ -153,26 +202,18 @@ const Background = () => {
     );
   }
 
-  // 3D Backgrounds
   return (
     <div className="absolute inset-0 z-0 overflow-hidden" style={{ height: '100vh', width: '100vw' }}>
-      <Canvas 
-        className="w-full h-full"
-        camera={{ position: [0, 0, 5], fov: 75 }}
-        gl={{ alpha: true }} // Allow transparency
-      >
-        <ambientLight intensity={0.5} />
-        <pointLight position={[0, 0, 5]} intensity={0.8} />
-        {background === 'matrix' && <MatrixRain />}
-        {background === 'stars' && <Stars />}
-        {background === 'circuit' && <CircuitBoard />}
-        {background === 'cyber' && <CyberGrid />}
-      </Canvas>
+      <canvas ref={canvasRef} className="w-full h-full" />
+      {background === 'matrix' && <MatrixRain canvasRef={canvasRef} ctx={ctx} bgColor={bgColor} />}
+      {background === 'stars' && <Stars canvasRef={canvasRef} ctx={ctx} bgColor={bgColor} />}
+      {background === 'circuit' && <CircuitBoard canvasRef={canvasRef} ctx={ctx} bgColor={bgColor} />}
+      {background === 'cyber' && <CyberGrid canvasRef={canvasRef} ctx={ctx} bgColor={bgColor} />}
       <div 
         className="absolute inset-0"
         style={{ 
           backgroundColor: currentColor,
-          opacity: 0.1, // Slight overlay for depth
+          opacity: 0.1,
           border: rgbBorderEnabled ? `4px solid ${currentColor}` : 'none',
           boxShadow: rgbBorderEnabled ? `0 0 20px ${currentColor}` : 'none'
         }}

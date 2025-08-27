@@ -172,18 +172,7 @@ const ControlPanel = () => {
           NEO-LED CONTROL HUB
         </motion.h2>
         <div className="relative group">
-          <select
-            value={currentTheme}
-            onChange={(e) => setCurrentTheme(e.target.value)}
-            className="bg-gray-800 text-white text-sm rounded-lg px-3 py-2 border border-gray-600/50 focus:border-green-500 focus:ring-1 focus:ring-green-500 appearance-none cursor-pointer pr-8"
-          >
-            {Object.entries(themes).map(([key, theme]) => (
-              <option key={key} value={key}>{theme.name}</option>
-            ))}
-          </select>
-          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-            <FaChevronDown className="text-gray-400" size={12} />
-          </div>
+       
           <div className="absolute z-10 hidden group-hover:block w-48 p-2 bg-gray-800 
                           border border-gray-600 rounded-lg shadow-lg text-xs bottom-full mb-2">
             Choose a visual theme for your control panel
@@ -192,7 +181,7 @@ const ControlPanel = () => {
       </motion.div>
 
       {/* Quick Access Toolbar */}
-      <motion.div 
+      {/* <motion.div 
         className="flex justify-center gap-3 p-3 bg-gray-800/40 rounded-xl border border-gray-700/20"
         whileHover={{ scale: 1.01 }}
       >
@@ -209,7 +198,7 @@ const ControlPanel = () => {
             </span>
           </motion.button>
         ))}
-      </motion.div>
+      </motion.div> */}
 
       {/* Text Input & Playback */}
       <motion.div 
@@ -260,51 +249,12 @@ const ControlPanel = () => {
             )}
           </motion.button>
           
-          <div className="flex gap-2">
-            <motion.button
-              className="flex-1 py-2 bg-gray-700 hover:bg-gray-600/70 text-gray-300 rounded-lg flex items-center justify-center"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <FaUndo size={14} />
-            </motion.button>
-            <motion.button
-              className="flex-1 py-2 bg-gray-700 hover:bg-gray-600/70 text-gray-300 rounded-lg flex items-center justify-center"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <FaRedo size={14} />
-            </motion.button>
-            <motion.button
-              className="flex-1 py-2 bg-gray-700 hover:bg-gray-600/70 text-gray-300 rounded-lg flex items-center justify-center"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <MdOutlineScreenshot size={16} />
-            </motion.button>
-          </div>
+        
         </div>
       </motion.div>
 
-      {/* Preset Quick Select */}
-      <motion.div className="flex flex-wrap gap-2 justify-center">
-        {presetButtons.map((preset) => (
-          <motion.button
-            key={preset.name}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-sm 
-                     bg-gray-800/60 hover:bg-gray-700/70 transition-all border border-gray-700/30"
-            style={{ 
-              background: `linear-gradient(45deg, ${preset.colors[0]}20, ${preset.colors[1]}20)`,
-              borderColor: `${preset.colors[0]}40`
-            }}
-          >
-            <span className="text-lg">{preset.icon}</span> 
-            <span>{preset.name}</span>
-          </motion.button>
-        ))}
-      </motion.div>
+      
+     
 
       {/* Collapsible Control Sections */}
       <motion.div className="space-y-4">

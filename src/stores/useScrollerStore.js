@@ -1,4 +1,3 @@
-// stores/useScrollerStore.js
 import { create } from 'zustand';
 import { presets } from './presets';
 
@@ -39,6 +38,10 @@ export const useScrollerStore = create((set) => ({
   easing: 'linear',
   delay: 0,
   isPlaying: false,
+  animationType: 'slide', // New: e.g., 'slide', 'fade', 'bounce', 'scale'
+  animationDuration: 0.5, // New: Duration in seconds
+  animationDelay: 0, // New: Delay in seconds
+  transitionStyle: 'easeInOut', // New: e.g., 'easeInOut', 'linear', 'spring'
   
   // Background & display
   background: 'matrix',
@@ -101,4 +104,10 @@ export const useScrollerStore = create((set) => ({
   setSensitivity: (sensitivity) => set({ sensitivity }),
   setReactTo: (reactTo) => set({ reactTo }),
   setIntensity: (intensity) => set({ intensity }),
+  
+  // New animation actions
+  setAnimationType: (animationType) => set({ animationType }),
+  setAnimationDuration: (animationDuration) => set({ animationDuration }),
+  setAnimationDelay: (animationDelay) => set({ animationDelay }),
+  setTransitionStyle: (transitionStyle) => set({ transitionStyle }),
 }));

@@ -100,7 +100,7 @@ const FontControls = () => {
   return (
     <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/30">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-green-400 flex items-center gap-2">
+        <h3 className="lg:text-2xl text-sm md:text-lg font-semibold text-green-400 flex items-center gap-2">
           <FaFont className="text-green-400" />
           Typography Controls
         </h3>
@@ -118,7 +118,7 @@ const FontControls = () => {
         {/* Font Size */}
         <div>
           <div className="flex justify-between items-center mb-2">
-            <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
+            <label className=" text-sm font-medium text-gray-300 flex items-center gap-2">
               <FaTextHeight className="text-green-400" />
               Font Size: {fontSize}px
             </label>
@@ -142,7 +142,7 @@ const FontControls = () => {
 
         {/* Font Family with categories */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+          <label className="bloc text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
             <FaFont className="text-green-400" />
             Font Family
           </label>
@@ -175,8 +175,8 @@ const FontControls = () => {
                 onClick={() => setTextCase(option.value)}
                 className={`py-2 px-3 rounded-lg text-sm font-medium flex flex-col items-center justify-center gap-1 transition-all ${
                   textCase === option.value
-                    ? 'bg-green-600 text-white shadow-lg shadow-green-500/25'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
+                    ? 'bg-green-600 lg:text-2xl text-sm md:text-lg text-white shadow-lg shadow-green-500/25'
+                    : 'bg-gray-700 lg:text-2xl text-sm md:text-lg text-gray-300 hover:bg-gray-600 hover:text-white'
                 }`}
                 title={option.label}
               >
@@ -191,8 +191,8 @@ const FontControls = () => {
           {/* Letter Spacing */}
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
-                <FaArrowsAltH className="text-green-400" />
+              <label className=" text-sm font-medium text-gray-300 flex items-center gap-2">
+                {/* <FaArrowsAltH className="text-green-400" /> */}
                 Letter Spacing
               </label>
               <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
@@ -212,7 +212,7 @@ const FontControls = () => {
           {/* Line Height */}
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
+              <label className=" text-sm font-medium text-gray-300 flex items-center gap-2">
                 <FaTextHeight className="text-green-400" />
                 Line Height
               </label>
