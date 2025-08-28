@@ -1,9 +1,8 @@
-// components/BackgroundSelector.jsx
 import React from 'react';
 import { useScrollerStore } from '../../stores/useScrollerStore';
 
 const BackgroundSelector = () => {
-  const { background, bgColor, setBackground, setBgColor } = useScrollerStore();
+  const { background, bgColor, backgroundImage, setBackground, setBgColor, setBackgroundImage } = useScrollerStore();
 
   const backgroundOptions = [
     { value: 'solid', label: 'Solid Color', icon: '🎨' },
@@ -13,9 +12,17 @@ const BackgroundSelector = () => {
     { value: 'cyber', label: 'Cyber Grid', icon: '🔷' }
   ];
 
+  const backgroundImages = [
+    { value: 'space', label: 'Space', src: '/images/space.jpg' },
+    { value: 'forest', label: 'Forest', src: '/images/forest.jpg' },
+    { value: 'cityscape', label: 'Cityscape', src: '/images/cityscape.jpg' },
+    { value: 'abstract', label: 'Abstract', src: '/images/abstract.jpg' }
+  ];
+
   const handlePreset = (type, color) => {
     setBackground(type);
     setBgColor(color);
+    setBackgroundImage(null); // Reset image when changing background type
   };
 
   const presetColors = [
@@ -37,12 +44,34 @@ const BackgroundSelector = () => {
           </label>
           <select
             value={background}
-            onChange={(e) => setBackground(e.target.value)}
+            onChange={(e) => {
+              setBackground(e.target.value);
+              setBackgroundImage(null); // Reset image when changing type
+            }}
             className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 transition-all"
           >
             {backgroundOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.icon} {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Background Image */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Background Image
+          </label>
+          <select
+            value={backgroundImage || 'none'}
+            onChange={(e) => setBackgroundImage(e.target.value === 'none' ? null : e.target.value)}
+            className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 transition-all"
+          >
+            <option value="none">None</option>
+            {backgroundImages.map((img) => (
+              <option key={img.value} value={img.value}>
+                {img.label}
               </option>
             ))}
           </select>

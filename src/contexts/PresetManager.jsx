@@ -6,7 +6,8 @@ import { Save, Upload, RefreshCw } from 'react-feather';
 const PresetManager = () => {
   const { loadPreset, savePreset, resetToDefault } = useScrollerStore();
   const [newPresetName, setNewPresetName] = React.useState('');
-  
+  const [saveMessage, setSaveMessage] = React.useState(''); // For feedback
+
   const presetOptions = [
     { name: 'default', label: 'Default' },
     { name: 'matrix', label: 'Matrix' },
@@ -15,6 +16,15 @@ const PresetManager = () => {
     { name: 'rgbParty', label: 'RGB Party' },
     { name: 'minimalWhite', label: 'Minimal' }
   ];
+
+  const handleSavePreset = () => {
+    if (newPresetName) {
+      savePreset(newPresetName);
+      setSaveMessage(`Preset '${newPresetName}' saved!`);
+      setTimeout(() => setSaveMessage(''), 2000); // Clear message after 2s
+      setNewPresetName(''); // Reset input
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -43,7 +53,7 @@ const PresetManager = () => {
           />
         </div>
         <motion.button
-          onClick={() => savePreset(newPresetName)}
+          onClick={handleSavePreset}
           disabled={!newPresetName}
           className="px-3 py-2 rounded-md bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-500 text-sm flex items-center gap-1"
           whileHover={{ scale: 1.05 }}
@@ -52,6 +62,17 @@ const PresetManager = () => {
           <Save size={14} /> Save
         </motion.button>
       </div>
+
+      {saveMessage && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="text-green-400 text-sm text-center"
+        >
+          {saveMessage}
+        </motion.div>
+      )}
 
       <motion.button
         onClick={resetToDefault}

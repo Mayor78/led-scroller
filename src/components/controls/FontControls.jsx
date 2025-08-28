@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useScrollerStore } from '../../stores/useScrollerStore';
-import { FaFont, FaTextHeight, FaArrowsAltH, FaMagic, FaUndo } from 'react-icons/fa';
+import { FaFont, FaTextHeight, FaArrowsAltH, FaMagic, FaUndo, FaPlus, FaMinus } from 'react-icons/fa';
 import { MdOutlineTextRotationNone, MdOutlineTextRotationAngleup } from 'react-icons/md';
 
 const FontControls = () => {
@@ -18,6 +18,7 @@ const FontControls = () => {
     flickerIntensity,
     textSkew,
     textRotation,
+    textStyle, // Added from TextControls
     setFont, 
     setTextCase, 
     setLetterSpacing, 
@@ -30,7 +31,8 @@ const FontControls = () => {
     setReflection,
     setFlickerIntensity,
     setTextSkew,
-    setTextRotation
+    setTextRotation,
+    setTextStyle // Added from TextControls
   } = useScrollerStore();
 
   // Initial values for reset
@@ -39,7 +41,7 @@ const FontControls = () => {
     textCase: 'uppercase',
     letterSpacing: 3,
     lineHeight: 1.2,
-    fontSize: 80,
+    fontSize: 50,
     outlineWidth: 0,
     outlineColor: '#000000',
     shadowBlur: 10,
@@ -47,7 +49,8 @@ const FontControls = () => {
     reflection: 0,
     flickerIntensity: 0,
     textSkew: 0,
-    textRotation: 0
+    textRotation: 0,
+    textStyle: 'normal' // Added default text style
   };
 
   // Reset all font styles to initial values
@@ -65,6 +68,18 @@ const FontControls = () => {
     setFlickerIntensity(initialValues.flickerIntensity);
     setTextSkew(initialValues.textSkew);
     setTextRotation(initialValues.textRotation);
+    setTextStyle(initialValues.textStyle); // Reset text style
+  };
+
+  // Increment/Decrement handlers for skew and rotation
+  const handleSkewChange = (delta) => {
+    const newSkew = Math.max(-45, Math.min(45, textSkew + delta));
+    setTextSkew(newSkew);
+  };
+
+  const handleRotationChange = (delta) => {
+    const newRotation = Math.max(-180, Math.min(180, textRotation + delta));
+    setTextRotation(newRotation);
   };
 
   const fontOptions = [
@@ -118,7 +133,7 @@ const FontControls = () => {
         {/* Font Size */}
         <div>
           <div className="flex justify-between items-center mb-2">
-            <label className=" text-sm font-medium text-gray-300 flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
               <FaTextHeight className="text-green-400" />
               Font Size: {fontSize}px
             </label>
@@ -142,7 +157,7 @@ const FontControls = () => {
 
         {/* Font Family with categories */}
         <div>
-          <label className="bloc text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+          <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
             <FaFont className="text-green-400" />
             Font Family
           </label>
@@ -187,12 +202,29 @@ const FontControls = () => {
           </div>
         </div>
 
+        {/* Text Style */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Text Style
+          </label>
+          <select
+            value={textStyle}
+            onChange={(e) => setTextStyle(e.target.value)}
+            className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 transition-all"
+          >
+            <option value="normal">Normal</option>
+            <option value="bullet">Bullet</option>
+            <option value="cloud">Cloud</option>
+            <option value="funky">Funky</option>
+          </select>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           {/* Letter Spacing */}
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className=" text-sm font-medium text-gray-300 flex items-center gap-2">
-                {/* <FaArrowsAltH className="text-green-400" /> */}
+              <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                <FaArrowsAltH className="text-green-400" />
                 Letter Spacing
               </label>
               <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
@@ -212,7 +244,7 @@ const FontControls = () => {
           {/* Line Height */}
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className=" text-sm font-medium text-gray-300 flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                 <FaTextHeight className="text-green-400" />
                 Line Height
               </label>
@@ -328,37 +360,82 @@ const FontControls = () => {
               </div>
             </div>
 
-            {/* Transform Effects */}
+            {/* Transform Effects with Buttons */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Text Skew: {textSkew}°
                 </label>
-                <input
-                  type="range"
-                  min="-45"
-                  max="45"
-                  value={textSkew}
-                  onChange={(e) => setTextSkew(parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-500"
-                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleSkewChange(-1)}
+                    className="flex-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg py-2"
+                  >
+                    <FaMinus />
+                  </button>
+                  <button
+                    onClick={() => handleSkewChange(1)}
+                    className="flex-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg py-2"
+                  >
+                    <FaPlus />
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Rotation: {textRotation}°
                 </label>
-                <input
-                  type="range"
-                  min="-180"
-                  max="180"
-                  value={textRotation}
-                  onChange={(e) => setTextRotation(parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-red-500"
-                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleRotationChange(-1)}
+                    className="flex-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg py-2"
+                  >
+                    <FaMinus />
+                  </button>
+                  <button
+                    onClick={() => handleRotationChange(1)}
+                    className="flex-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg py-2"
+                  >
+                    <FaPlus />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <style>
+          {`
+            @keyframes glitch {
+              0% { transform: translate(0); }
+              20% { transform: translate(-2px, 2px); }
+              40% { transform: translate(2px, -2px); }
+              60% { transform: translate(-2px, -2px); }
+              80% { transform: translate(2px, 2px); }
+              100% { transform: translate(0); }
+            }
+            .bullet-text::before {
+              content: "•";
+              position: absolute;
+              left: 0;
+              color: #00ff00;
+              fontSize: 1.5em;
+            }
+            .cloud-text {
+              fontFamily: 'cursive, sans-serif';
+              color: #00ffff;
+              textShadow: 2px 2px 4px #00ff00, -2px -2px 4px #00ffff;
+              borderRadius: 10px;
+              background: rgba(0, 0, 0, 0.3);
+              padding: 15px;
+            }
+            .funky-text {
+              color: #ff00ff;
+              textShadow: 0 0 10px #ff00ff, 0 0 20px #00ff00;
+              animation: glitch 0.5s infinite;
+            }
+          `}
+        </style>
       </div>
     </div>
   );

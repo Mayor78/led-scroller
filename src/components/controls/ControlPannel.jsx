@@ -5,7 +5,7 @@ import { FaInfo, FaSlideshare } from "react-icons/fa6";
 import { MdOutlinePauseCircleOutline, MdPlayArrow, MdHelpOutline, MdOutlineScreenshot } from "react-icons/md";
 import { motion, AnimatePresence } from 'framer-motion';
 
-import FontControls from './FontControls';
+import FontControls from './FontControls'; // Updated from TextControls
 import ColorControls from './ColorControls';
 import SpeedControl from './SpeedControl';
 import BackgroundSelector from './BackgroundSelector';
@@ -24,9 +24,7 @@ const sectionAnimations = {
 };
 
 // Dropdown Section Component
-const ControlSection = ({ title, children, defaultOpen = false, icon: Icon }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
+const ControlSection = ({ title, children, isOpen, onToggle, icon: Icon }) => {
   return (
     <motion.div 
       className="bg-gray-700/30 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-600/20 hover:border-green-400/30 transition-all"
@@ -37,7 +35,7 @@ const ControlSection = ({ title, children, defaultOpen = false, icon: Icon }) =>
       transition={{ duration: 0.3 }}
     >
       <motion.button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => onToggle(title)}
         className="w-full flex justify-between items-center p-4 hover:bg-gray-600/20 transition-all group"
         whileHover={{ x: 3 }}
       >
@@ -81,8 +79,7 @@ const ControlSection = ({ title, children, defaultOpen = false, icon: Icon }) =>
 
 const ControlPanel = () => {
   const { text, setText, isPlaying, togglePlay, background, speed } = useScrollerStore();
-  const [activeHelp, setActiveHelp] = useState(null);
-  const [currentTheme, setCurrentTheme] = useState('matrix');
+  const [activeSections, setActiveSections] = useState(new Set(['Text Appearance']));
   const [isMobile, setIsMobile] = useState(false);
 
   // Check if device is mobile
@@ -114,7 +111,6 @@ const ControlPanel = () => {
 
   const handlePlayToggle = () => {
     if (isMobile && !isPlaying) {
-      // Use native alert instead of modal
       if (window.confirm("For the best experience, the LED display will open in fullscreen landscape mode. Please rotate your device if it doesn't happen automatically. Continue?")) {
         togglePlay();
         enterFullscreen();
@@ -133,7 +129,6 @@ const ControlPanel = () => {
       element.requestFullscreen().catch(e => console.log("Fullscreen error:", e));
     }
     
-    // Lock screen orientation to landscape on mobile devices
     if (screen.orientation && screen.orientation.lock) {
       screen.orientation.lock('landscape').catch(e => console.log("Orientation lock error:", e));
     }
@@ -147,14 +142,22 @@ const ControlPanel = () => {
     { icon: FaAmazonPay, tooltip: "Effects" }
   ];
 
+  // Toggle section state
+  const handleSectionToggle = (title) => {
+    setActiveSections((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(title)) {
+        newSet.delete(title); // Close the section if already open
+      } else {
+        newSet.add(title); // Open the section if not open
+      }
+      return newSet;
+    });
+  };
+
   return (
     <motion.div 
       className="bg-gray-900/95 backdrop-blur-lg p-5 rounded-2xl shadow-2xl space-y-5 border border-gray-700/30 relative overflow-hidden"
-      style={{
-        '--primary': themes[currentTheme].primary,
-        '--bg': themes[currentTheme].bg,
-        background: `linear-gradient(145deg, #1a202c 0%, #2d3748 100%)`
-      }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -166,39 +169,18 @@ const ControlPanel = () => {
       {/* Header with theme selector */}
       <motion.div className="flex justify-between items-center relative z-10">
         <motion.h2 
-          className="text-2xl font-bold bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent"
+          className="text-lg md:text-2xl font-bold bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent"
           whileHover={{ scale: 1.02 }}
         >
           NEO-LED CONTROL HUB
         </motion.h2>
         <div className="relative group">
-       
           <div className="absolute z-10 hidden group-hover:block w-48 p-2 bg-gray-800 
                           border border-gray-600 rounded-lg shadow-lg text-xs bottom-full mb-2">
             Choose a visual theme for your control panel
           </div>
         </div>
       </motion.div>
-
-      {/* Quick Access Toolbar */}
-      {/* <motion.div 
-        className="flex justify-center gap-3 p-3 bg-gray-800/40 rounded-xl border border-gray-700/20"
-        whileHover={{ scale: 1.01 }}
-      >
-        {toolbarIcons.map((item, i) => (
-          <motion.button
-            key={i}
-            className="p-3 rounded-xl bg-gray-700/50 hover:bg-gray-600/70 text-green-400 relative group"
-            whileHover={{ scale: 1.1, y: -2 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <item.icon size={20} />
-            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 py-1 px-2 bg-gray-800 text-xs text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-              {item.tooltip}
-            </span>
-          </motion.button>
-        ))}
-      </motion.div> */}
 
       {/* Text Input & Playback */}
       <motion.div 
@@ -240,51 +222,76 @@ const ControlPanel = () => {
           >
             {isPlaying ? (
               <>
-                <MdOutlinePauseCircleOutline size={20} /> PAUSE
+                <MdOutlinePauseCircleOutline size={18} /> PAUSE
               </>
             ) : (
               <>
-                <MdPlayArrow size={20} /> PLAY
+                <MdPlayArrow size={18} /> PLAY
               </>
             )}
           </motion.button>
-          
-        
         </div>
       </motion.div>
 
-      
-     
-
       {/* Collapsible Control Sections */}
       <motion.div className="space-y-4">
-        <ControlSection title="Text Appearance" defaultOpen={true} icon={FaAmazonPay}>
-          <FontControls />
-          <TextLimiter/>
+        <ControlSection 
+          title="Text Appearance" 
+          isOpen={activeSections.has('Text Appearance')} 
+          onToggle={handleSectionToggle} 
+          icon={FaAmazonPay}
+        >
+          <FontControls /> {/* Updated to use FontControls */}
+          <TextLimiter />
         </ControlSection>
 
-        <ControlSection title="Color & Effects" icon={FaPalette}>
+        <ControlSection 
+          title="Color & Effects" 
+          isOpen={activeSections.has('Color & Effects')} 
+          onToggle={handleSectionToggle} 
+          icon={FaPalette}
+        >
           <ColorControls />
           <EffectControls />
         </ControlSection>
 
-        <ControlSection title="Animation Settings" icon={FaAmazonPay}>
+        <ControlSection 
+          title="Animation Settings" 
+          isOpen={activeSections.has('Animation Settings')} 
+          onToggle={handleSectionToggle} 
+          icon={FaAmazonPay}
+        >
           <SpeedControl />
         </ControlSection>
 
-        <ControlSection title="Background & Border" icon={FaAmazonPay}>
+        <ControlSection 
+          title="Background & Border" 
+          isOpen={activeSections.has('Background & Border')} 
+          onToggle={handleSectionToggle} 
+          icon={FaAmazonPay}
+        >
           <BackgroundSelector />
           <FlickerControls />
           <RgbBorderControls />
         </ControlSection>
 
         {background !== 'solid' && (
-          <ControlSection title="Audio Reactivity" icon={FaAmazonPay}>
+          <ControlSection 
+            title="Audio Reactivity" 
+            isOpen={activeSections.has('Audio Reactivity')} 
+            onToggle={handleSectionToggle} 
+            icon={FaAmazonPay}
+          >
             <AudioControls />
           </ControlSection>
         )}
 
-        <ControlSection title="Presets" defaultOpen={true}>
+        <ControlSection 
+          title="Presets" 
+          isOpen={activeSections.has('Presets')} 
+          onToggle={handleSectionToggle} 
+          icon={FaAmazonPay}
+        >
           <PresetManager />
         </ControlSection>
       </motion.div>

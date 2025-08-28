@@ -1,129 +1,104 @@
 // presets.js
-const defaultPreset = {
-  text: "YOUR TEXT HERE",
-  font: "'Orbitron', monospace",
-  textCase: "uppercase",
-  letterSpacing: 3,
-  fontSize: 80,
-    textSkew: 0,
-    textRotation: 0,
-    color: '#00ff00',
-    outlineColor: '#000000',
-    outlineWidth: 0,
-    shadowColor: '#00ff00',
+const buildPresets = () => {
+  const defaultPreset = {
+    text: "YOUR TEXT HERE",
+    color: "#00ff00",
+    font: "'Orbitron', sans-serif",
+    textCase: "uppercase",
+    letterSpacing: 3,
+    lineHeight: 1.2,
+    outlineColor: "#000000",
+    outlineWidth: 1,
+    shadowColor: "#00ff00",
     shadowBlur: 10,
     reflection: 0,
-    flickerIntensity: 0,
-//   outlineColor: "#000000",
-//   outlineWidth: 0,
-//   shadowColor: "#00ff00",
-//   shadowBlur: 10,
-//   reflection: 0,
-  direction: "left",
-  speed: 5,
-  easing: "linear",
-  delay: 0,
-  isPlaying: false,
-  background: "matrix",
-  bgColor: "#000000",
-  frameStyle: "led",
-  cornerLights: true,
-  audioSource: "none",
-  sensitivity: 100,
-  reactTo: "brightness",
-  intensity: 50,
-  flickerEnabled: false,
-  flickerSpeed: 5,
-  flickerColors: ["#ff0000", "#00ff00", "#0000ff"],
-  rgbBorderEnabled: false,
-  rgbBorderSpeed: 5,
-  rgbBorderColors: ["#ff0000", "#00ff00", "#0000ff"]
-};
-
-export const presets = {
-  // Default Preset
-  default: defaultPreset,
-
-  // Popular Presets
-  matrix: {
-    ...defaultPreset,
-    text: "MATRIX",
-    color: "#00ff41",
-    font: "'Courier New', monospace",
+    direction: "left",
+    speed: 5,
+    isPlaying: false,
     background: "matrix",
-    bgColor: "#001a00",
-    fontSize: 72,
-    textSkew: 0,
-    textRotation: 0,
-    
-    outlineColor: '#003b00',
-    outlineWidth: 1,
-    shadowColor: '#00ff41',
-    shadowBlur: 15,
-    reflection: 20,
-    flickerIntensity: 30,
-    rgbBorderEnabled: true,
-    rgbBorderColors: ["#00ff41", "#00b341", "#008241"],
-   
-  },
-
-  cyberpunk: {
-    ...defaultPreset,
-    text: "CYBERPUNK",
-    color: "#ff00ff",
-    font: "'Rajdhani', sans-serif",
-    background: "circuit",
-    bgColor: "#110011",
-    outlineWidth: 2,
-    outlineColor: "#00ffff",
-    rgbBorderEnabled: true,
-    rgbBorderColors: ["#ff00ff", "#00ffff", "#ffff00"],
-    shadowBlur: 15
-  },
-
-  neon: {
-    ...defaultPreset,
-    text: "NEON",
-    color: "#ffff00",
-    font: "'Iceland', cursive",
-    background: "solid",
-    bgColor: "#000033",
-    frameStyle: "neon",
-    rgbBorderEnabled: true,
-    rgbBorderColors: ["#ff0000", "#ffff00", "#ff00ff"],
-    shadowColor: "#ffff00",
-    shadowBlur: 20
-  },
-
-  // Special Effect Presets
-  rgbParty: {
-    ...defaultPreset,
-    text: "RGB PARTY!",
-    rgbBorderEnabled: true,
-    rgbBorderSpeed: 10,
-    rgbBorderColors: ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"],
-    flickerEnabled: true,
-    flickerSpeed: 8,
-    flickerColors: ["#ff0000", "#00ff00", "#0000ff"],
-    shadowBlur: 15
-  },
-
-  // Minimal Preset
-  minimal: {
-    ...defaultPreset,
-    text: "MINIMAL",
-    color: "#ffffff",
-    font: "'Roboto', sans-serif",
-    background: "solid",
     bgColor: "#000000",
-    frameStyle: "none",
-    outlineWidth: 0,
-    shadowBlur: 0,
-    cornerLights: false
-  }
+    frameStyle: "led",
+    cornerLights: true,
+    flickerEnabled: false,
+    flickerSpeed: 5,
+    flickerColors: ["#ff0000", "#00ff00", "#0000ff"],
+    rgbBorderEnabled: false,
+    rgbBorderSpeed: 5,
+    rgbBorderColors: ["#ff0000", "#00ff00", "#0000ff"],
+    maxLength: 50,
+    verticalText: false,
+    mirroredText: false,
+    textStyle: "normal", // New: Default text style
+  };
+
+  return {
+    default: defaultPreset,
+    matrix: {
+      ...defaultPreset,
+      text: "MATRIX",
+      color: "#00ff41",
+      font: "'Courier New', monospace",
+      background: "matrix",
+      bgColor: "#001a00",
+      rgbBorderEnabled: true,
+      rgbBorderColors: ["#00ff41", "#00b341", "#008241"],
+      textStyle: "bullet", // Bullet style for matrix theme
+    },
+    cyberpunk: {
+      ...defaultPreset,
+      text: "CYBERPUNK 2077",
+      color: "#ff00ff",
+      font: "'Rajdhani', sans-serif",
+      background: "circuit",
+      bgColor: "#110011",
+      outlineWidth: 2,
+      outlineColor: "#00ffff",
+      rgbBorderEnabled: true,
+      rgbBorderColors: ["#ff00ff", "#00ffff", "#ffff00"],
+      textStyle: "funky", // Funky style for cyberpunk theme
+    },
+    neon: {
+      ...defaultPreset,
+      text: "NEON LIGHTS",
+      color: "#ffff00",
+      font: "'Iceland', cursive",
+      background: "solid",
+      bgColor: "#000033",
+      frameStyle: "neon",
+      rgbBorderEnabled: true,
+      rgbBorderColors: ["#ff0000", "#ffff00", "#ff00ff"],
+      textStyle: "cloud", // Cloud style for neon theme
+    },
+    rgbParty: {
+      ...defaultPreset,
+      text: "RGB PARTY!",
+      rgbBorderEnabled: true,
+      rgbBorderSpeed: 10,
+      rgbBorderColors: ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"],
+      flickerEnabled: true,
+      flickerSpeed: 8,
+      flickerColors: ["#ff0000", "#00ff00", "#0000ff"],
+      textStyle: "funky", // Funky style for party effect
+    },
+    minimalWhite: {
+      ...defaultPreset,
+      text: "MINIMAL",
+      color: "#ffffff",
+      font: "'Roboto', sans-serif",
+      background: "solid",
+      bgColor: "#000000",
+      frameStyle: "none",
+      outlineWidth: 0,
+      shadowBlur: 0,
+      textStyle: "normal", // Normal style for minimal theme
+    },
+  };
 };
 
-// Helper function to get preset names for UI
-export const getPresetNames = () => {
-  return Object.keys(presets).filter(name => name !== 'default');
+export const presets = buildPresets();
+
+// Helper function to apply presets
+export const applyPreset = (presetName) => {
+  const preset = presets[presetName] || presets.default;
+  return preset;
 };

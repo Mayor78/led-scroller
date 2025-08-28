@@ -27,6 +27,7 @@ export default function LEDDisplay() {
   const { 
     background, 
     bgColor,
+    backgroundImage,
     frameStyle,
     cornerLights,
     text,
@@ -40,6 +41,13 @@ export default function LEDDisplay() {
   const isMobile = useIsMobile();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
+  const [renderKey, setRenderKey] = useState(Date.now()); // Dynamic key for re-mount
+
+  // Log state changes
+  useEffect(() => {
+    console.log('LEDDisplay - background:', background, 'bgColor:', bgColor, 'backgroundImage:', backgroundImage);
+    setRenderKey(Date.now()); // Update key on state change
+  }, [background, bgColor, backgroundImage]);
 
   // Monitor fullscreen changes
   useEffect(() => {
@@ -52,7 +60,6 @@ export default function LEDDisplay() {
       );
       setIsFullscreen(isCurrentlyFullscreen);
       
-      // Pause playback if exiting fullscreen
       if (!isCurrentlyFullscreen && isPlaying) {
         togglePlay();
       }
@@ -88,7 +95,6 @@ export default function LEDDisplay() {
     };
   }, []);
 
-  // Show SweetAlert2 landscape modal
   const showLandscapeAlert = () => {
     Swal.fire({
       title: 'Landscape Mode Required',
@@ -122,7 +128,6 @@ export default function LEDDisplay() {
         cancelButton: 'landscape-swal-cancel'
       },
       didOpen: () => {
-        // Add CSS animation for the rotate icon
         const style = document.createElement('style');
         style.textContent = `
           @keyframes rotate {
@@ -133,20 +138,16 @@ export default function LEDDisplay() {
         document.head.appendChild(style);
       },
       willClose: () => {
-        // Clean up the style element
         const style = document.querySelector('style[data-swal="rotate"]');
         if (style) style.remove();
       }
     }).then((result) => {
       if (result.isDismissed) {
-        // User clicked cancel, pause playback
         togglePlay();
       }
-      // If user confirms, just continue (modal will close)
     });
   };
 
-  // Enter fullscreen landscape mode
   const enterFullscreenLandscape = async () => {
     if (displayRef.current) {
       try {
@@ -160,9 +161,7 @@ export default function LEDDisplay() {
           await displayRef.current.msRequestFullscreen();
         }
         
-        // Show SweetAlert if not in landscape
         if (isMobile && !isLandscape) {
-          // Small delay to ensure fullscreen transition completes
           setTimeout(() => {
             showLandscapeAlert();
           }, 300);
@@ -173,14 +172,12 @@ export default function LEDDisplay() {
     }
   };
 
-  // Trigger fullscreen on play for mobile
   useEffect(() => {
     if (isPlaying && isMobile && !isFullscreen) {
       enterFullscreenLandscape();
     }
   }, [isPlaying, isMobile, isFullscreen]);
 
-  // Exit fullscreen when not playing
   useEffect(() => {
     if (!isPlaying && isFullscreen) {
       if (document.exitFullscreen) {
@@ -196,8 +193,8 @@ export default function LEDDisplay() {
   }, [isPlaying, isFullscreen]);
 
   const displayClasses = `
-    led-display relative overflow-hidden border-2 border-gray-700 bg-black
-    ${isFullscreen ? 'fixed inset-0 z-40 w-screen h-screen rounded-none border-none' : 'h-64 w-full rounded-xl'}
+    led-display relative overflow-hidden border-2 border-gray-700 bg-transparent
+    ${isFullscreen ? 'fixed inset-0 z-10 w-screen h-screen rounded-none border-none' : 'h-64 w-full rounded-xl'}
   `;
 
   return (
@@ -206,25 +203,22 @@ export default function LEDDisplay() {
         ref={displayRef}
         className={displayClasses}
       >
-        {/* Background Layer */}
-        <Background type={background} color={bgColor} />
+        <Background key={renderKey} /> {/* Use dynamic renderKey */}
         
-        {/* LED Screen Effect */}
-        <div className="absolute inset-0 led-screen-effect">
+        <div className="absolute inset-0 led-screen-effect" style={{ zIndex: 1 }}>
           <div className="absolute inset-0 opacity-20 pointer-events-none"
                style={{
                  backgroundImage: 'linear-gradient(transparent 50%, rgba(0, 255, 65, 0.1) 50%)',
                  backgroundSize: '100% 4px'
                }} />
           {isFullscreen && (
-            <div className="absolute inset-0 bg-black opacity-20 pointer-events-none"
+            <div className="absolute inset-0 bg-transparent opacity-20 pointer-events-none" /* Changed bg-black to bg-transparent */
                  style={{
                    boxShadow: 'inset 0 0 50px rgba(0, 0, 0, 0.8)'
                  }} />
           )}
         </div>
         
-        {/* Scrolling Text */}
         <ScrollingText
           text={text}
           color={color}
@@ -232,16 +226,13 @@ export default function LEDDisplay() {
           isPlaying={isPlaying}
         />
         
-        {/* Visual Effects */}
         <LEDEffects 
           frameStyle={frameStyle} 
           cornerLights={cornerLights} 
         />
         
-        {/* Reflection Effect */}
         <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black to-transparent opacity-50"></div>
 
-        {/* Fullscreen Controls */}
         <AnimatePresence>
           {isFullscreen && (
             <motion.div 
@@ -262,10 +253,7 @@ export default function LEDDisplay() {
               </motion.button>
             </motion.div>
           )}
-
-         
         </AnimatePresence>
-         {/* <ControlPanel/> */}
       </div>
 
       <style jsx>{`
@@ -313,8 +301,7 @@ export default function LEDDisplay() {
         }
       `}</style>
 
-      {/* Add SweetAlert2 styles */}
-      {/* <style jsx global>{`
+      <style jsx global>{`
         .landscape-swal-popup {
           background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
           border: 1px solid rgba(0, 255, 65, 0.3) !important;
@@ -358,7 +345,7 @@ export default function LEDDisplay() {
           background: #374151 !important;
           transform: translateY(-1px);
         }
-      `}</style> */}
+      `}</style>
     </>
   );
 }

@@ -10,9 +10,9 @@ const ScrollingText = () => {
     textCase,
     letterSpacing,
     lineHeight,
-    fontSize, // Added from store
-    textSkew, // Added from store
-    textRotation, // Added from store
+    fontSize,
+    textSkew,
+    textRotation,
     outlineColor,
     outlineWidth,
     shadowColor,
@@ -21,7 +21,8 @@ const ScrollingText = () => {
     direction,
     speed,
     isPlaying,
-    flickerIntensity
+    flickerIntensity,
+    textStyle, // Destructured from store
   } = useScrollerStore();
 
   const [isLandscape, setIsLandscape] = useState(false);
@@ -140,6 +141,34 @@ const ScrollingText = () => {
         image-rendering: -moz-crisp-edges;
         image-rendering: crisp-edges;
       }
+      .bullet-text::before {
+        content: "•";
+        position: absolute;
+        left: -20px;
+        color: #00ff00;
+        fontSize: 1.5em;
+      }
+      .cloud-text {
+        fontFamily: 'cursive, sans-serif';
+        color: #00ffff;
+        textShadow: 2px 2px 4px #00ff00, -2px -2px 4px #00ffff;
+        borderRadius: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+      }
+      .funky-text {
+        color: #ff00ff;
+        textShadow: 0 0 10px #ff00ff, 0 0 20px #00ff00;
+        animation: glitch 0.5s infinite;
+      }
+      @keyframes glitch {
+        0% { transform: translate(0); }
+        20% { transform: translate(-2px, 2px); }
+        40% { transform: translate(2px, -2px); }
+        60% { transform: translate(-2px, -2px); }
+        80% { transform: translate(2px, 2px); }
+        100% { transform: translate(0); }
+      }
     `;
 
     return () => {
@@ -150,23 +179,26 @@ const ScrollingText = () => {
   }, []);
 
   const getAnimationName = () => {
-    switch(direction) {
-      case 'right': return 'rightScroll';
-      case 'bounce': return 'bounceScroll';
-      case 'glitch': return 'glitchScroll';
-      default: return 'leftScroll';
+    switch (direction) {
+      case 'right':
+        return 'rightScroll';
+      case 'bounce':
+        return 'bounceScroll';
+      case 'glitch':
+        return 'glitchScroll';
+      default:
+        return 'leftScroll';
     }
   };
 
-  // Use the fontSize from store instead of responsive calculation
   const getFontSize = () => {
     return `${fontSize}px`;
   };
 
-  const textStyle = {
+  const computedTextStyle = { // Renamed to avoid conflict
     color: color || '#00ff00',
     fontFamily: font || 'monospace',
-    fontSize: getFontSize(), // Now uses store value
+    fontSize: getFontSize(),
     fontWeight: 'bold',
     textTransform: textCase || 'uppercase',
     letterSpacing: `${letterSpacing || 3}px`,
@@ -184,25 +216,30 @@ const ScrollingText = () => {
     opacity: flicker,
     filter: `blur(${flickerIntensity > 50 ? '1px' : '0px'})`,
     transition: 'opacity 0.1s ease, filter 0.1s ease',
-    // Apply text transformations from store
-    transform: `skew(${textSkew || 0}deg) rotate(${textRotation || 0}deg)`
+    transform: `skew(${textSkew || 0}deg) rotate(${textRotation || 0}deg)`,
+    ...(textStyle === 'bullet' && { position: 'relative', className: 'bullet-text' }),
+    ...(textStyle === 'cloud' && { className: 'cloud-text' }),
+    ...(textStyle === 'funky' && { className: 'funky-text' }),
   };
 
   const containerStyle = {
     animation: isPlaying ? `${getAnimationName()} ${Math.max(3, 20 - (speed || 5))}s linear infinite` : 'none',
-    willChange: 'transform'
+    willChange: 'transform',
   };
 
   const renderText = (content) => {
     if (direction === 'glitch') {
       return (
-        <span className="text-glitch" data-text={content} style={textStyle}>
+        <span className={`text-glitch ${computedTextStyle.className || ''}`} data-text={content} style={computedTextStyle}>
           {content}
         </span>
       );
     }
-    
-    return <span style={textStyle}>{content}</span>;
+    return (
+      <span className={computedTextStyle.className || ''} style={computedTextStyle}>
+        {content}
+      </span>
+    );
   };
 
   return (
@@ -221,7 +258,7 @@ const ScrollingText = () => {
           opacity: (reflection || 0) / 100,
           maskImage: 'linear-gradient(to bottom, transparent, black 70%)',
           WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 70%)',
-          transform: 'scaleY(-1)'
+          transform: 'scaleY(-1)',
         }}>
           {renderText(text || 'LED SCROLLER')}
           {renderText(text || 'LED SCROLLER')}
@@ -238,14 +275,12 @@ const ScrollingText = () => {
                  transparent 100%)
              `,
              backgroundSize: '100% 4px',
-             opacity: 0.3
+             opacity: 0.3,
            }} />
 
       {/* Vignette effect */}
       <div className="absolute inset-0 pointer-events-none"
-           style={{
-             boxShadow: 'inset 0 0 100px rgba(0, 0, 0, 0.8)'
-           }} />
+           style={{ boxShadow: 'inset 0 0 100px rgba(0, 0, 0, 0.8)' }} />
 
       {/* Subtle glow behind text */}
       <motion.div 
@@ -255,7 +290,7 @@ const ScrollingText = () => {
         transition={{ duration: 0.5 }}
         style={{
           background: `radial-gradient(ellipse at center, ${color || '#00ff00'}20 0%, transparent 70%)`,
-          filter: 'blur(20px)'
+          filter: 'blur(20px)',
         }}
       />
     </div>

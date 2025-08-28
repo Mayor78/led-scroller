@@ -8,9 +8,10 @@ export const useScrollerStore = create((set) => ({
   textCase: 'uppercase',
   letterSpacing: 3,
   lineHeight: 1.2,
-  fontSize: 80,
+  fontSize: 50,
   textSkew: 0,
   textRotation: 0,
+   textStyle: "normal", // New: Text style state
   
   ...presets.default,
   
@@ -48,6 +49,7 @@ export const useScrollerStore = create((set) => ({
   bgColor: '#000000',
   frameStyle: 'led',
   cornerLights: true,
+  backgroundImage: null,
   
   // Audio reactivity
   audioSource: 'none',
@@ -97,6 +99,7 @@ export const useScrollerStore = create((set) => ({
   setDelay: (delay) => set({ delay }),
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
   setBackground: (background) => set({ background }),
+  setBackgroundImage: (backgroundImage) => set({ backgroundImage }),
   setBgColor: (bgColor) => set({ bgColor }),
   setFrameStyle: (frameStyle) => set({ frameStyle }),
   toggleCornerLights: () => set((state) => ({ cornerLights: !state.cornerLights })),
@@ -104,6 +107,8 @@ export const useScrollerStore = create((set) => ({
   setSensitivity: (sensitivity) => set({ sensitivity }),
   setReactTo: (reactTo) => set({ reactTo }),
   setIntensity: (intensity) => set({ intensity }),
+ 
+  setTextStyle: (textStyle) => set({ textStyle }),
   
   // New animation actions
   setAnimationType: (animationType) => set({ animationType }),
