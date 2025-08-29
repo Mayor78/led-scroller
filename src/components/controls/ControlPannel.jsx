@@ -5,7 +5,7 @@ import { FaInfo, FaSlideshare } from "react-icons/fa6";
 import { MdOutlinePauseCircleOutline, MdPlayArrow, MdHelpOutline, MdOutlineScreenshot } from "react-icons/md";
 import { motion, AnimatePresence } from 'framer-motion';
 
-import FontControls from './FontControls'; // Updated from TextControls
+import FontControls from './FontControls';
 import ColorControls from './ColorControls';
 import SpeedControl from './SpeedControl';
 import BackgroundSelector from './BackgroundSelector';
@@ -78,9 +78,12 @@ const ControlSection = ({ title, children, isOpen, onToggle, icon: Icon }) => {
 };
 
 const ControlPanel = () => {
-  const { text, setText, isPlaying, togglePlay, background, speed } = useScrollerStore();
+  const { text, setText, isPlaying, togglePlay, background, setDisplayMode, displayMode, setStaticText, staticText, setStaticTextPosition, setStaticTextAlignment, setStaticTextFontSize } = useScrollerStore();
   const [activeSections, setActiveSections] = useState(new Set(['Text Appearance']));
   const [isMobile, setIsMobile] = useState(false);
+  const [staticPosition, setStaticPosition] = useState('center');
+  const [staticAlignment, setStaticAlignment] = useState('center');
+  const [staticFontSize, setStaticFontSize] = useState(24);
 
   // Check if device is mobile
   useEffect(() => {
@@ -94,20 +97,9 @@ const ControlPanel = () => {
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
-  const themes = {
-    matrix: { primary: "#00ff41", bg: "#000", name: "MATRIX" },
-    cyber: { primary: "#00ff9d", bg: "#0a0e17", name: "CYBERPUNK" },
-    neon: { primary: "#ff00ff", bg: "#110011", name: "NEON DREAMS" },
-    retro: { primary: "#ff9900", bg: "#1a0f29", name: "RETRO WAVE" },
-    oceanic: { primary: "#00ffff", bg: "#001a33", name: "DEEP OCEAN" }
-  };
-
-  const presetButtons = [
-    { name: "Matrix", colors: ["#00ff00", "#001a00"], icon: "🌐" },
-    { name: "Neon", colors: ["#ff00ff", "#110011"], icon: "💡" },
-    { name: "Cyber", colors: ["#00ffff", "#001a33"], icon: "🔮" },
-    { name: "Retro", colors: ["#ff9900", "#1a0f29"], icon: "🕹️" }
-  ];
+  useEffect(() => {
+    setStaticText(text || 'Static Text'); // Sync static text with scrolling text initially
+  }, [text]);
 
   const handlePlayToggle = () => {
     if (isMobile && !isPlaying) {
@@ -134,22 +126,26 @@ const ControlPanel = () => {
     }
   };
 
-  // Toolbar icons with improved styling
-  const toolbarIcons = [
-    { icon: FaAmazonPay, tooltip: "Text Options" },
-    { icon: FaPalette, tooltip: "Color Controls" },
-    { icon: FaSlideshare, tooltip: "Adjust Settings" },
-    { icon: FaAmazonPay, tooltip: "Effects" }
-  ];
+  const handleToggleDisplayMode = () => {
+    const newMode = displayMode === 'scrolling' ? 'static' : 'scrolling';
+    setDisplayMode(newMode);
+    if (newMode === 'static') {
+      setStaticText(text); // Use current text as static text
+      setStaticTextPosition(staticPosition);
+      setStaticTextAlignment(staticAlignment);
+      setStaticTextFontSize(staticFontSize);
+    } else {
+      setText(staticText); // Sync back to scrolling text
+    }
+  };
 
-  // Toggle section state
   const handleSectionToggle = (title) => {
     setActiveSections((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(title)) {
-        newSet.delete(title); // Close the section if already open
+        newSet.delete(title);
       } else {
-        newSet.add(title); // Open the section if not open
+        newSet.add(title);
       }
       return newSet;
     });
@@ -166,7 +162,7 @@ const ControlPanel = () => {
       <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-green-400/10 blur-xl"></div>
       <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-blue-400/10 blur-xl"></div>
       
-      {/* Header with theme selector */}
+      {/* Header with theme selector and toggle */}
       <motion.div className="flex justify-between items-center relative z-10">
         <motion.h2 
           className="text-lg md:text-2xl font-bold bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent"
@@ -174,12 +170,14 @@ const ControlPanel = () => {
         >
           NEO-LED CONTROL HUB
         </motion.h2>
-        <div className="relative group">
-          <div className="absolute z-10 hidden group-hover:block w-48 p-2 bg-gray-800 
-                          border border-gray-600 rounded-lg shadow-lg text-xs bottom-full mb-2">
-            Choose a visual theme for your control panel
-          </div>
-        </div>
+        <motion.button
+          onClick={handleToggleDisplayMode}
+          className="px-3 py-1 rounded-md bg-gray-700 hover:bg-gray-600 text-sm text-white flex items-center gap-1"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {displayMode === 'scrolling' ? 'Switch to Static' : 'Switch to Scrolling'}
+        </motion.button>
       </motion.div>
 
       {/* Text Input & Playback */}
@@ -191,22 +189,24 @@ const ControlPanel = () => {
           <div className="flex items-center gap-1 mb-2">
             <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
               <FaTypo3 size={14} className="text-green-400" />
-              Display Text
+              {displayMode === 'scrolling' ? 'Display Text' : 'Static Text'}
             </label>
             <div className="relative group">
               <FaInfo size={14} className="text-gray-400 hover:text-white cursor-help" />
               <div className="absolute z-10 hidden group-hover:block w-64 p-3 bg-gray-800 
                               border border-gray-600 rounded-lg shadow-lg text-xs left-6 -translate-x-full">
-                Type your message here. It will scroll across the LED display with your selected effects.
+                {displayMode === 'scrolling' 
+                  ? 'Type your message here. It will scroll across the LED display with your selected effects.'
+                  : 'Enter text to display statically with customizable position, alignment, and size.'}
               </div>
             </div>
           </div>
           <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
+            value={displayMode === 'scrolling' ? text : staticText}
+            onChange={(e) => displayMode === 'scrolling' ? setText(e.target.value) : setStaticText(e.target.value)}
             className="w-full bg-gray-700/50 text-white p-3 rounded-lg border border-gray-600/50 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 transition-all"
             rows={3}
-            placeholder="Enter your scrolling message..."
+            placeholder={displayMode === 'scrolling' ? 'Enter your scrolling message...' : 'Enter your static text...'}
           />
         </div>
         <div className="flex flex-col justify-between gap-3">
@@ -241,8 +241,57 @@ const ControlPanel = () => {
           onToggle={handleSectionToggle} 
           icon={FaAmazonPay}
         >
-          <FontControls /> {/* Updated to use FontControls */}
-          <TextLimiter />
+          <FontControls /> {/* Apply to both scrolling and static */}
+          {displayMode === 'static' && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-300">Position</label>
+                <select
+                  value={staticPosition}
+                  onChange={(e) => {
+                    setStaticPosition(e.target.value);
+                    setStaticTextPosition(e.target.value);
+                  }}
+                  className="w-full bg-gray-700/50 text-white p-2 rounded-lg border border-gray-600/50"
+                >
+                  <option value="top">Top</option>
+                  <option value="center">Center</option>
+                  <option value="bottom">Bottom</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-300">Alignment</label>
+                <select
+                  value={staticAlignment}
+                  onChange={(e) => {
+                    setStaticAlignment(e.target.value);
+                    setStaticTextAlignment(e.target.value);
+                  }}
+                  className="w-full bg-gray-700/50 text-white p-2 rounded-lg border border-gray-600/50"
+                >
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-300">Font Size</label>
+                <input
+                  type="number"
+                  value={staticFontSize}
+                  onChange={(e) => {
+                    const size = Math.max(12, Math.min(200, parseInt(e.target.value) || 24));
+                    setStaticFontSize(size);
+                    setStaticTextFontSize(size);
+                  }}
+                  className="w-full bg-gray-700/50 text-white p-2 rounded-lg border border-gray-600/50"
+                  min="12"
+                  max="200"
+                />
+              </div>
+            </div>
+          )}
+          {displayMode === 'scrolling' && <TextLimiter />}
         </ControlSection>
 
         <ControlSection 
@@ -255,14 +304,16 @@ const ControlPanel = () => {
           <EffectControls />
         </ControlSection>
 
-        <ControlSection 
-          title="Animation Settings" 
-          isOpen={activeSections.has('Animation Settings')} 
-          onToggle={handleSectionToggle} 
-          icon={FaAmazonPay}
-        >
-          <SpeedControl />
-        </ControlSection>
+        {displayMode === 'scrolling' && (
+          <ControlSection 
+            title="Animation Settings" 
+            isOpen={activeSections.has('Animation Settings')} 
+            onToggle={handleSectionToggle} 
+            icon={FaAmazonPay}
+          >
+            <SpeedControl />
+          </ControlSection>
+        )}
 
         <ControlSection 
           title="Background & Border" 

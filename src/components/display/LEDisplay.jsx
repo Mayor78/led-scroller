@@ -34,7 +34,26 @@ export default function LEDDisplay() {
     color,
     speed,
     isPlaying,
-    togglePlay
+    togglePlay,
+    displayMode,
+    staticText,
+    staticTextPosition,
+    staticTextAlignment,
+    staticTextFontSize,
+    font,
+    textCase,
+    letterSpacing,
+    lineHeight,
+    fontSize,
+    outlineWidth,
+    outlineColor,
+    shadowBlur,
+    shadowColor,
+    reflection,
+    flickerIntensity,
+    textSkew,
+    textRotation,
+    textStyle
   } = useScrollerStore();
   
   const displayRef = useRef(null);
@@ -45,9 +64,9 @@ export default function LEDDisplay() {
 
   // Log state changes
   useEffect(() => {
-    console.log('LEDDisplay - background:', background, 'bgColor:', bgColor, 'backgroundImage:', backgroundImage);
+    console.log('LEDDisplay - background:', background, 'bgColor:', bgColor, 'displayMode:', displayMode, 'text:', text, 'staticText:', staticText, 'color:', color, 'font:', font);
     setRenderKey(Date.now()); // Update key on state change
-  }, [background, bgColor, backgroundImage]);
+  }, [background, bgColor, backgroundImage, displayMode, text, staticText, color, font]);
 
   // Monitor fullscreen changes
   useEffect(() => {
@@ -194,8 +213,17 @@ export default function LEDDisplay() {
 
   const displayClasses = `
     led-display relative overflow-hidden border-2 border-gray-700 bg-transparent
-    ${isFullscreen ? 'fixed inset-0 z-10 w-screen h-screen rounded-none border-none' : 'h-64 w-full rounded-xl'}
+    ${isFullscreen ? 'fixed inset-0 z-0 w-screen h-screen rounded-none border-none' : 'h-64 w-full rounded-xl'}
   `;
+
+  // Apply font styles to static text
+  const textStyleClass = () => {
+    let className = '';
+    if (textStyle === 'bullet') className += ' bullet-text';
+    if (textStyle === 'cloud') className += ' cloud-text';
+    if (textStyle === 'funky') className += ' funky-text';
+    return className;
+  };
 
   return (
     <>
@@ -212,26 +240,60 @@ export default function LEDDisplay() {
                  backgroundSize: '100% 4px'
                }} />
           {isFullscreen && (
-            <div className="absolute inset-0 bg-transparent opacity-20 pointer-events-none" /* Changed bg-black to bg-transparent */
+            <div className="absolute inset-0 bg-transparent opacity-20 pointer-events-none"
                  style={{
                    boxShadow: 'inset 0 0 50px rgba(0, 0, 0, 0.8)'
                  }} />
           )}
         </div>
         
-        <ScrollingText
-          text={text}
-          color={color}
-          speed={speed}
-          isPlaying={isPlaying}
-        />
+        {displayMode === 'scrolling' ? (
+          <ScrollingText
+            text={text}
+            color={color}
+            speed={speed}
+            isPlaying={isPlaying}
+            style={{
+              fontFamily: font,
+              textTransform: textCase,
+              letterSpacing: `${letterSpacing}px`,
+              lineHeight: lineHeight,
+              fontSize: `${fontSize}px`,
+              textShadow: outlineWidth > 0 ? `${outlineWidth}px 0 0 ${outlineColor}, -${outlineWidth}px 0 0 ${outlineColor}, 0 ${outlineWidth}px 0 ${outlineColor}, 0 -${outlineWidth}px 0 ${outlineColor}` : 'none',
+              filter: shadowBlur > 0 ? `drop-shadow(0 0 ${shadowBlur}px ${shadowColor})` : 'none',
+              transform: `skew(${textSkew}deg) rotate(${textRotation}deg)`,
+              zIndex: 10 // Ensure text is above background
+            }}
+          />
+        ) : (
+          <div
+            className={`absolute inset-0 flex text-center ${textStyleClass()}`}
+            style={{
+              color: color,
+              fontFamily: font,
+              textTransform: textCase,
+              letterSpacing: `${letterSpacing}px`,
+              lineHeight: lineHeight,
+              fontSize: `${staticTextFontSize}px`,
+              textShadow: outlineWidth > 0 ? `${outlineWidth}px 0 0 ${outlineColor}, -${outlineWidth}px 0 0 ${outlineColor}, 0 ${outlineWidth}px 0 ${outlineColor}, 0 -${outlineWidth}px 0 ${outlineColor}` : 'none',
+              filter: shadowBlur > 0 ? `drop-shadow(0 0 ${shadowBlur}px ${shadowColor})` : 'none',
+              transform: `skew(${textSkew}deg) rotate(${textRotation}deg)`,
+              zIndex: 10, // Ensure text is above background
+              justifyContent: staticTextAlignment === 'left' ? 'flex-start' : staticTextAlignment === 'right' ? 'flex-end' : 'center',
+              alignItems: staticTextPosition === 'top' ? 'flex-start' : staticTextPosition === 'bottom' ? 'flex-end' : 'center',
+            }}
+          >
+            {displayMode === 'static' ? staticText : text}
+          </div>
+        )}
         
         <LEDEffects 
           frameStyle={frameStyle} 
           cornerLights={cornerLights} 
+          style={{ zIndex: 5 }} // Effects below text, above background
         />
         
-        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black to-transparent opacity-50"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black to-transparent opacity-50" style={{ zIndex: 5 }}></div>
 
         <AnimatePresence>
           {isFullscreen && (
@@ -239,7 +301,7 @@ export default function LEDDisplay() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute top-4 right-4 z-10 flex gap-2"
+              className="absolute top-4 right-4 z-20 flex gap-2" // Control buttons above all
             >
               <motion.button
                 onClick={() => togglePlay()}
@@ -286,6 +348,35 @@ export default function LEDDisplay() {
         .led-display:-moz-full-screen {
           border-radius: 0 !important;
           border: none !important;
+        }
+
+        @keyframes glitch {
+          0% { transform: translate(0); }
+          20% { transform: translate(-2px, 2px); }
+          40% { transform: translate(2px, -2px); }
+          60% { transform: translate(-2px, -2px); }
+          80% { transform: translate(2px, 2px); }
+          100% { transform: translate(0); }
+        }
+        .bullet-text::before {
+          content: "•";
+          position: absolute;
+          left: -1.5em;
+          color: #00ff00;
+          fontSize: 1.5em;
+        }
+        .cloud-text {
+          fontFamily: 'cursive, sans-serif';
+          color: #00ffff;
+          textShadow: 2px 2px 4px #00ff00, -2px -2px 4px #00ffff;
+          borderRadius: 10px;
+          background: rgba(0, 0, 0, 0.3);
+          padding: 15px;
+        }
+        .funky-text {
+          color: #ff00ff;
+          textShadow: 0 0 10px #ff00ff, 0 0 20px #00ff00;
+          animation: glitch 0.5s infinite;
         }
 
         @media screen and (orientation: landscape) and (max-height: 500px) {
