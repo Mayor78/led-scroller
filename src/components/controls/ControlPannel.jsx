@@ -275,9 +275,9 @@ const ControlPanel = () => {
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-300">Font Size</label>
+                <label className="text-sm font-medium text-gray-300">Font Size (increase or decrease)</label>
                 <input
-                  type="number"
+                  type="range"
                   value={staticFontSize}
                   onChange={(e) => {
                     const size = Math.max(12, Math.min(200, parseInt(e.target.value) || 24));

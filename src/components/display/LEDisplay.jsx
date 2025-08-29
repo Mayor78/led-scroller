@@ -267,7 +267,7 @@ export default function LEDDisplay() {
           />
         ) : (
           <div
-            className={`absolute inset-0 flex text-center ${textStyleClass()}`}
+            className={`absolute inset-0 flex text-center ${textStyleClass()} static-text`}
             style={{
               color: color,
               fontFamily: font,
@@ -348,6 +348,14 @@ export default function LEDDisplay() {
         .led-display:-moz-full-screen {
           border-radius: 0 !important;
           border: none !important;
+        }
+
+        .static-text {
+          word-break: break-word;
+          white-space: normal;
+          overflow-wrap: break-word;
+          -webkit-line-clamp: unset;
+          -webkit-box-orient: vertical;
         }
 
         @keyframes glitch {
