@@ -53,8 +53,7 @@ export default function LEDDisplay() {
     flickerIntensity,
     textSkew,
     textRotation,
-    textStyle,
-    fontWeight
+    textStyle
   } = useScrollerStore();
   
   const displayRef = useRef(null);
@@ -65,9 +64,9 @@ export default function LEDDisplay() {
 
   // Log state changes
   useEffect(() => {
-    console.log('LEDDisplay - background:', background, 'bgColor:', bgColor, 'displayMode:', displayMode, 'text:', text, 'staticText:', staticText, 'color:', color, 'font:', font, 'fontWeight:', fontWeight);
+    console.log('LEDDisplay - background:', background, 'bgColor:', bgColor, 'displayMode:', displayMode, 'text:', text, 'staticText:', staticText, 'color:', color, 'font:', font);
     setRenderKey(Date.now()); // Update key on state change
-  }, [background, bgColor, backgroundImage, displayMode, text, staticText, color, font, fontWeight]);
+  }, [background, bgColor, backgroundImage, displayMode, text, staticText, color, font]);
 
   // Monitor fullscreen changes
   useEffect(() => {
@@ -260,11 +259,10 @@ export default function LEDDisplay() {
               letterSpacing: `${letterSpacing}px`,
               lineHeight: lineHeight,
               fontSize: `${fontSize}px`,
-              fontWeight: fontWeight || 'normal', // Apply weight
               textShadow: outlineWidth > 0 ? `${outlineWidth}px 0 0 ${outlineColor}, -${outlineWidth}px 0 0 ${outlineColor}, 0 ${outlineWidth}px 0 ${outlineColor}, 0 -${outlineWidth}px 0 ${outlineColor}` : 'none',
               filter: shadowBlur > 0 ? `drop-shadow(0 0 ${shadowBlur}px ${shadowColor})` : 'none',
               transform: `skew(${textSkew}deg) rotate(${textRotation}deg)`,
-              zIndex: 10 // Ensure text is above background
+              zIndex: 10 
             }}
           />
         ) : (
@@ -277,7 +275,6 @@ export default function LEDDisplay() {
               letterSpacing: `${letterSpacing}px`,
               lineHeight: lineHeight,
               fontSize: `${staticTextFontSize}px`,
-              fontWeight: fontWeight || 'normal', // Apply weight
               textShadow: outlineWidth > 0 ? `${outlineWidth}px 0 0 ${outlineColor}, -${outlineWidth}px 0 0 ${outlineColor}, 0 ${outlineWidth}px 0 ${outlineColor}, 0 -${outlineWidth}px 0 ${outlineColor}` : 'none',
               filter: shadowBlur > 0 ? `drop-shadow(0 0 ${shadowBlur}px ${shadowColor})` : 'none',
               transform: `skew(${textSkew}deg) rotate(${textRotation}deg)`,
@@ -379,14 +376,14 @@ export default function LEDDisplay() {
         .cloud-text {
           fontFamily: 'cursive, sans-serif';
           color: #00ffff;
-          textShadow: '2px 2px 4px #00ff00, -2px -2px 4px #00ffff';
-          borderRadius: '10px';
-          background: 'rgba(0, 0, 0, 0.3)';
-          padding: '15px';
+          textShadow: 2px 2px 4px #00ff00, -2px -2px 4px #00ffff;
+          borderRadius: 10px;
+          background: rgba(0, 0, 0, 0.3);
+          padding: 15px;
         }
         .funky-text {
-          color: '#ff00ff';
-          textShadow: '0 0 10px #ff00ff, 0 0 20px #00ff00';
+          color: #ff00ff;
+          textShadow: 0 0 10px #ff00ff, 0 0 20px #00ff00;
           animation: glitch 0.5s infinite;
         }
 

@@ -2,14 +2,10 @@ import React, { useState } from 'react';
 import { useScrollerStore } from '../../stores/useScrollerStore';
 
 const TextControls = () => {
-  const { text, setText, fontSize, setFontSize, textSkew, setTextSkew, textRotation, setTextRotation, textStyle, setTextStyle, fontWeight, setFontWeight } = useScrollerStore();
+  const { text, setText, fontSize, setFontSize, textSkew, setTextSkew, textRotation, setTextRotation, textStyle, setTextStyle } = useScrollerStore();
 
   const handleStyleChange = (e) => {
     setTextStyle(e.target.value);
-  };
-
-  const handleWeightChange = (e) => {
-    setFontWeight(e.target.value);
   };
 
   const getTextStyle = () => {
@@ -17,7 +13,6 @@ const TextControls = () => {
       fontSize: `${fontSize || 80}px`,
       padding: '10px',
       transition: 'all 0.3s ease',
-      fontWeight: fontWeight || 'normal', // Apply the weight from store
     };
 
     switch (textStyle) {
@@ -72,22 +67,7 @@ const TextControls = () => {
           <option value="funky">Funky</option>
         </select>
       </div>
-      
-      <div>
-        <label className="text-sm text-gray-300">Font Weight:</label>
-        <select
-          value={fontWeight || 'normal'}
-          onChange={handleWeightChange}
-          className="mt-1 p-2 bg-gray-700 text-white rounded w-full"
-        >
-          <option value="thin">Thin</option>
-          <option value="light">Light</option>
-          <option value="normal">Normal</option>
-          <option value="bold">Bold</option>
-          <option value="bolder">Bolder</option>
-        </select>
-      </div>
-      
+     
       <div>
         <label className="text-sm text-gray-300">Font Size (px):</label>
         <input
